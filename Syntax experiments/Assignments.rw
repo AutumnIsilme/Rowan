@@ -1,0 +1,11 @@
+
+foo : (a: int, b: str):
+    #Comment
+    print("{a}, {b}")
+    c = 42 #Duck-typed
+    c = "Hello, World!" #Shadowed
+    c :: 78 #Duck-typed Constant
+    c : int64 : 78 #Explicit-typed constant
+    b :: int #The type is type
+    print("{b}") #"int"
+    

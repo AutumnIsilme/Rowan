@@ -1,0 +1,126 @@
+// is comment, /* */ is block comment
+#include "a.rw"; //Include text from file a.rw in this one. No header files.
+#import "b.rw"; //Import symbols from and link b, but they are separate object files
+
+z := 12; //Global variable z is defined. Only declarations and definitions are allowed outside a block.
+
+/*
+string : struct : {
+    contents : char[];
+    length : u64;
+}
+*/
+
+main :: (args : string[]) {
+    a : int = 4.57; //Evaluates to 5
+    b := 4.57; //Float inferred. Only basic types will be inferred, not sizes.
+    c : int; //Uninitialized
+
+    d : int : 5; //Constant
+    e :: 5; //Inferred type
+
+    f := (a: int, b: string) => string {
+        result : string;
+        for 0..a {
+            result += b;
+        }
+        return result;
+    } (b, "Hello World! ");
+
+    g : func : (a: int, b: int) => int { //Specify function type
+        return a + b;
+    }; //End statement with ;, even a block
+
+    h :: (a: float, b: float) => float {
+        a + b //A block evaluates to the last expression inside it, similar to rust
+    };
+
+    |d| { //Captures d
+        print(d + 12);
+    };
+
+    print(cast(d, complex));
+
+    i : int@; //int@ is integer pointer type
+
+    // @ goes more 'pointer-ish', # goes less pointerish
+    i = d@; //Operator goes after the operand in this case
+    print(i#);
+
+    j : func; //Function pointer type essentially.
+
+    k : int[] = 1, 2, 3, 4; //List of items is specified simply by commas.
+
+    //k[4] is invalid. Arrays are length checked:
+    print(k@#); //Prints the length of the array - length is stored first in the array
+    print((k@+4)#); //Prints the size of an integer - stride is stored second. Pointer math adds bytes by default. Mabye. @TODO: change this
+    print(k.length);
+
+    l : int64 = 64; //64 bit integer. int, float, uint are 'get stuff working' types. 
+    //uint8, int8 are 8 bit versions. Goes up to 256 bit e.g. u256
+    //float16, float32, float64, float128
+
+    if a ?? b |c| { //If a or b
+        print(c);
+    };
+
+    if c ?? d || { //If c or d, empty capture block
+        print("Either c or d exists!");
+    };
+
+    l :: struct soa {
+        x : double;
+        y : double;
+        z : double;
+    };
+
+    m :: struct {
+        a : string;
+        b : int;
+    };
+
+    n :: struct {
+        include o : l; //Include the members of struct type l with option for named
+        include : m; //Include m anonymously
+        include p : q@; //Include by pointer
+    };
+
+    q :: struct { //Order does not matter for struct declarations, or even functions.
+        r : u64;
+        b : u64;
+        g : u64;
+    };
+
+    r : struct { //Equivalent to r : q;, allows variables with a struct type but no type defined elsewhere.
+        r : u64;
+        b : u64;
+        g : u64;
+    };
+};
+
+#main {
+    main : int@ = 12; //Assigns the value of the int pointed to to 12, not the pointer
+    print(main#); //Different to #main. Dereferences.
+};
+
+#build{ //Compile time function, indicated by # e.g. main, build, include, followed by a block 
+    //indicates the block is for a particular purpose
+    //$build specifies build settings. It is not required.
+    build_main = main; //Specify main function. Not required if a block is annotated #main - this will be default,
+    //but no args can be passed to a $main block such as command line input. Can set to this even if #main is specified.
+};
+
+#import { //Import block will import all files in the block
+    "c.rw",
+    "d.rw",
+    "e.rw"
+};
+
+#import "f.rw", "g.rw"; //Also applicable for a list
+
+y := {
+    14
+} + 12;
+
+//Compile-time execution with #run, function body construction with something like #body, args baking with #bake
+

@@ -1,0 +1,122 @@
+interface RendererAPI {
+    init :: () -> () //Semicolons are optional
+    shutdown :: () -> ()
+    set_viewport :: (x: u32, y: u32, width: u32, height: u32) -> ()
+
+    clear :: (colour: ^vec4) -> ()
+    clear :: () -> ()
+    draw_indexed :: (mesh: ^Mesh)
+
+    #on_interface_deactivate :: () -> (); // Basically calls shutdown, since we are swapping to a different API
+    #on_interface_activate   :: () -> (); // Basically calls init, since we now need to use this API
+}
+
+RendererAPIData :: static struct {
+    draw_queue : [MAX_DRAW_TASKS]DrawTask;
+    draw_queue_index : u32
+}
+
+implement RendererAPI as OpenGLRendererAPI {
+    // Code
+}
+
+implement RendererAPI as VulkanRendererAPI {
+    // Code
+}
+
+Component : enum(struct) {
+    ChairComponent : {
+        occupied : bool;
+        sittable : bool;
+        sit_height : f32;
+    }
+}
+
+GameObject : struct {
+    pos : Transform;
+    model : Mesh;
+    //components_present : bitfield(Component.num_enum_vals) //Value inside braces is the number of bits used.
+    components : [MAX_COMPONENTS]^Component;
+    components : enum_list(Component); // For specifically this circumstance where I want to be able to have one of any type 
+    // of the enum but not necessarily all of them
+}
+
+register_component : (using go: ^GameObject, component: ^Component) -> () {
+    if components[component.enum_index] {
+        CORE_ASSERT(components[component.enum_index)] != null, //null = all zeros, or completely empty
+            "You cannot add a component to an GameObject if a component of that type already exists on that GameObject!");
+        return;
+    }
+    components[component.enum_index] = component;
+}
+
+Component : enum {... // Continue enum definition i.e. add items to the enum because why not?
+    FlightComponent : {
+        max_height : f32;
+        max_speed : f32;
+        max_ascension_rate : f32;
+    }
+}
+
+IpAddr : enum {
+    V4 : {
+        a, b, c, d : u8;
+    },
+    V6 : {
+        addr : String;
+    }
+}
+
+create_ip_v6 : (addr : String) -> IpAddr {
+    return IpAddr.V6(addr);
+}
+
+send_message : (addr : IpAddr, msg : Message) -> Message {
+    socket : Socket;
+    switch (addr) {
+    case IpAdder.V4 -> { socket = OpenV4Socket(addr.a, addr.b, addr.c, addr.d); }
+    case IpAddr.V6 -> { socket = OpenV6Socket(addr.addr); }
+    }
+    send_data(socket, serialize_message(msg));
+}
+
+serialize_message : ()
+
+ChairComponent : struct {
+    occupied : bool;
+    sittable : bool;
+    sit_height : f32;
+}
+
+GameObjects : struct {
+    positions : []Transform;
+    models : []Mesh;
+    chair_components : []ChairComponent;
+}
+
+/*
+10000 objects in a scene
+20 types of component?
+-> 20*10000*8=1600000, or 1.6MB of memory in pointers. 
+
+Most objects will only be static, perhaps with an animation component.
+
+AI component
+Transform
+Mesh
+Item
+*/
+
+main :: (args: []string) -> () {
+    parsed_args :: parse_args(args);
+    if (parsed_args.openGL) {
+        interface RendererAPI OpenGLRendererAPI
+    }
+    else if (parsed_args.vulkan) {
+        interface RendererAPI VulkanRendererAPI
+    }
+
+    //These are automatically switching function pointers set at runtime, 
+    //possible to change during runtime, although this might be difficult.
+    //Perhaps have a way to specify that it can only be set in the main method before anything else happens?
+}

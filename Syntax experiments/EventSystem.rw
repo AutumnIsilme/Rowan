@@ -1,0 +1,158 @@
+
+
+module EventSystem {
+
+    enum EventType {
+        AppUpdate
+    }
+    //An enumeration is essentially a static dictionary. New values can be added at runtime with enumName.addElement((string)<name>)
+
+    interface class Event {
+        friend function bool EventDispatcher(Event e);
+
+        function EventType GetEventType();
+        function const char& GetName();
+        function int GetCategoryFlags();
+        function string ToString();
+        implemented inline function bool Handled() { return m_Handled; }
+        implemented inline procedure registerListener(EventListener& listener) { listeners.append(listened); }
+
+        implemented protected bool m_Handled;
+        protected EventType eventType;
+        static list<EventListener&> listeners; //A static variable means that it is the same for all instances of the class.
+                                           //Because it is an interface, each implementation will have a static array of
+                                           //listeners, different for each implementation.
+        //implemented static int a; //implemented means that this is already implemented for all implementations. This
+        //means that a will be the same in all implementations.
+    }
+
+    generic<EventType> interface class EventListener{
+        function bool onEvent(Event<EventType> e);
+    }
+
+    function bool DispatchEvent(Event e) {
+        for auto listener : listeners {
+            if listener.onEvent(e)
+                break;
+        }
+    }
+}
+
+module SystemDemo {
+
+    import randint from random
+    import println from output
+    import Vector3f from maths
+
+    using module EventSystem;
+
+    EventType.addElement("ExplosionEventType");
+
+    class ExplosionEvent implements Event {
+        function EventType GetEventType();
+        function const char& GetName();
+        function int GetCategoryFlags();
+        function string ToString() {
+            return "Explosion event at " + 
+        }
+
+        protected EventType eventType = EventType.ExplosionEventType;
+        protected Vector3f position;
+        static list<EventListener&> listeners;
+
+        public constructor(Vector3f position){
+            this.position = position;
+        }
+    }
+
+    class TNT implements EventListener<ExplosionEventType> {
+        public constructor() { ExplosionEvent.registerListener(this&); }
+        public constructor(Vector3f position) { ExplosionEvent.registerListener(this&); this.position = position; }
+
+        function bool onEvent(ExplosionEvent e) {
+            if Vector3f.distance(e.position, position) < 10
+                explode();
+        }
+
+        private procedure explode() {
+            println("BOOM");
+            exploded = true;
+        }
+
+        public procedure setY(int y){
+            if y < 1024 && y >= 0
+                position.y = y;
+            else
+                printf("Attempted to set TNT y to invalid positon {0}\n", y);
+        }
+
+        protected bool exploded = false;
+        protected Vector3f position = Vector3f(0, 0, 0);
+    }
+
+    entrypoint main(int argc, string& argv) {
+        TNT[] tntStack = TNT[10];
+        for i in range(10) {
+            tntStack[i].setY(i);
+        }
+
+        while (true) {
+            if randint(0, 10) == 9
+                DispatchEvent(ExplosionEvent(Vector3f(0, 0, 0)));
+            else if randint(1, 100000) == 42351
+        }
+
+        return 0;
+    }
+}
+
+module AutoFreeDemo {
+
+    entrypoint main(int argc, string& argv) { //At most one entrypoint method per module, but there can be multiple main methods in the program, with
+                                       //the module started being specified in the .rwb file
+
+        void& tnt = getTNTVoidPointer();
+        Vector3f position = cast(tnt, TNT).position;
+
+        return 0;
+    }
+
+    function void& getTNTVoidPointer() {
+        TNT& a = TNT(Vector3f(0, 0, 0))&;
+        return cast(a, void&); //a is not freed because it is in the return statement for the function
+    }
+
+    struct randomStruct {
+        int a;
+        string b;
+        Vector3f c;
+    }
+
+    function int getAnInt() {
+        randomStruct& s = randomStruct(12, "Hello World", Vector3f(1, 2, 3))&;
+
+        return 5;
+        //implicit dealloc(randomStruct) as s is not used at all
+    }
+
+    function void& mallocRandomInts(int bytes) {
+        void& ptr = malloc(bytes);
+        int& integer = cast(ptr, int&);
+        for i in range(bytes / sizeof(int)) {
+            (integer + i * sizeof(int))* = randint(0, 100);
+        }
+        return integer;
+    }
+
+    procedure runSimpleGame() {
+        int& numbers = cast(int&, malloc(10 * 10 * sizeof(int), mallocRandomInts));
+
+        string input_val = "";
+        while input_val != "q" {
+            println("Enter a position and )
+            input_val = stdin();
+            
+        }
+    }
+}
+

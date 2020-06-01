@@ -1,0 +1,64 @@
+import "stdio"
+
+struct Grid_Mode {
+    int32 columns, rows
+    bool[] filled
+}
+
+main : (int argc, char **argv) -> int {
+    for i: 0..10 {
+        println("Hello, World %d!", i)
+    }
+
+    int32 sentry_var = 12
+    while sentry_var != 0 {
+        sentry_var = foo(sentry_var)
+    }
+
+    inferred := "Hello, World!"
+
+    extern C {
+        int a = 12;
+        int b = 13;
+        printf("%d %d\n", a, b);
+    }
+
+    auto VGA_WIDTH : 80 //Constant variable, type inferred
+    int counter
+
+    if counter < VGA_WIDTH {
+        buffer[counter++] = 'd'
+    } else if false {
+
+    } else {
+        println("Error: Counter has exceeded VGA_WIDTH!")
+    }
+
+    extern ASM {
+        mov rax, 12
+        mov rbx, 13
+        int 0x20
+    }
+    using foo;
+    auto a, b, c = foo(true, {1, 2, 3, 4, 5})
+    printf("%s", c)
+    //printf("%s", auto a, b, . = foo(true, {1, 2, 3, 4, 5})) Do this syntax? Probably not - too confusing
+
+    int16 d, bool e, string f = foo(true, {1, 2, 3, 4, 5}); //Auto-cast and unpack
+    
+    return 0
+}
+
+module foo {
+    foo : (int32 i) -> int32 {
+        return i - 1 //Could do some more complicated stuff here, for example turing machine simulation
+    }
+
+    foo : (double i) -> double {
+        return i % 7 + i / 7
+    }
+
+    foo : (bool active, int[5] data) -> (int, bool, string) {
+        return data[3], active, f"data: {data[0]}, {data[1]}, {data[2]}, {data[3]}, {data[4]}"
+    }
+}

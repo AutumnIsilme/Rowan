@@ -1,0 +1,320 @@
+typedef unsigned int u32
+/* Function definitions */
+
+int foo(const char *str, unsigned int length) {
+    //Do stuff
+}
+
+foo :: int (const char *string, u32 length) {
+
+}
+
+int (const char *string, u32 length) foo {
+
+}
+
+foo : int (const char *string, u32 length) {
+
+}
+
+foo : (const char *string, u32 length) -> int {
+
+}
+
+fn foo (const char *string, u32 length) -> int {
+
+}
+
+func foo (const char *string, u32 length) -> int {
+
+}
+
+foo : (const char *string, u32 length) int {
+
+}
+
+foo : const char *string, u32 length -> int {
+
+}
+
+foo : (const char *string, u32 length) -> (int) {
+
+}
+
+foo : (const char *string, u32 length) (int) {
+
+}
+
+foo (const char *string, u32 length):int {
+
+}
+
+foo(const char *string, u32 length) -> int {
+    
+}
+
+fn foo(const char *string, u32 length):(int) {
+
+}
+
+foo const char *string u32 length {
+    return 2 //Infer return type, must be the same at all return points
+}
+
+foo(const char *string, u32 length) = {
+    return 2
+}
+
+foo := (const char *string, u32 length) => int {
+
+}
+
+foo : (string: const char *, length: u32) : int {
+
+}
+
+foo = (string: const char *, length: u32) : int {
+
+}
+
+def foo(string: const char *, length: u32) -> int {
+
+}
+
+def foo(const char *string, u32 length) -> int:
+    //Significant whitespace
+
+
+/*-----------------------------------------------*/
+
+/* Function calls */
+
+foo("Yes", 3)
+
+[foo string:"Yes", length:3]
+
+[foo: "Yes", 3]
+
+foo <- "Yes", 3
+
+("Yes", 3) | foo
+
+foo "Yes" 3
+
+foo "Yes", 3
+
+foo<("Yes", 3)
+
+foo<-("Yes", 3)
+
+/*-----------------------------------------------*/
+
+/* Declarations */
+
+int i;
+
+i : int;
+
+i <- 0 //Infer
+
+0 -> i
+
+int : i
+
+let i : int
+
+mut i : int
+
+var i : int
+
+i =: 0
+
+i = int()
+
+var i = int()
+
+/*-----------------------------------------------*/
+
+/* Assignments */
+
+i = 12
+
+i <- 12
+
+12 -> i
+
+i 12
+
+/*-----------------------------------------------*/
+
+/* For loops */
+
+for(int i = 0; i < 128; i++) {
+
+}
+
+for i: 0..128 {
+
+}
+
+for i in range(128) {
+
+}
+
+for (i := 0..128) { //Iterator, implicit next? Or just increment?
+
+}
+
+for i = 0 to 127 inc 1 do { //inc is optional
+
+}
+
+i := 0
+if (i < 128) {
+    //Do stuff
+    repeat ++i;
+} //Also works for while loops.
+
+for i in 0..128 loop
+
+end loop
+
+/*-----------------------------------------------*/
+
+/* While loops */
+
+while (true) {
+
+}
+
+while true {
+
+}
+
+while true loop
+
+end loop
+
+while true:
+    //Significant whitespace
+
+
+do {
+    
+} while true {
+
+} //Single type of loop, both blocks are optional but keywords are not
+
+while true do {
+
+}
+
+/*-----------------------------------------------*/
+
+/* Switch-case */
+
+switch (state_val) {
+case 0:
+    //Do stuff
+    break;
+default:
+    //Also do stuff
+    break;
+}
+
+
+switch state_val {
+    case 0:
+
+    default:
+
+}
+
+
+switch state_val {
+case 0 {
+
+}
+default {
+
+}
+}
+
+
+switch state_val {
+    case 0, 2, 4, 6, 8, 10 {
+
+    }
+    case 1, 3, 5, 7, 9 {
+
+    }
+    default {
+        
+    }
+}
+
+switch state_val {
+    case 0:
+        continue;
+    case 1:
+        //Fallen through
+    default:
+        //Do other stuff, not fallen through
+}
+
+//Too sentence-like, probably relatively difficult to parse.
+switching on state_val, in the case of 0 do print "Hello, World. The value was 0!" then break, while in the default case do nothing.
+
+/*-----------------------------------------------*/
+
+/* Structs */
+
+typedef struct Vector3f {
+    double x;
+    double y;
+    double z;
+} Vector3f;
+
+struct Vector3f {
+    double x;
+    double y;
+    double z;
+}
+
+Vector3f : struct {
+    double x;
+    double y;
+    double z;
+}
+
+Vector3f :: struct {
+    double x, y, z
+}
+
+record Vector3f {
+    double x, y, z;
+}
+
+type :: Vector3f
+    double: x, y, z
+end type
+
+/*-----------------------------------------------*/
+
+/* enum */
+
+typedef enum Grid_Mode {
+    MODE_1 = 0,
+    MODE_2,
+    MODE_3,
+    MODE_4
+} Grid_Mode;
+
+
+Grid_Mode: enum u32 {
+    MODE_1 : 0,
+    MODE_2 : 1,
+    MODE_3 : 2,
+    MODE_4 : 3
+}
+

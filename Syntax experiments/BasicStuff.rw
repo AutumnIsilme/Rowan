@@ -1,0 +1,156 @@
+import random
+import println from output
+import mapSearch
+
+module Household { // A module is a collection of functions and structures.
+int a = 2; int b = 123
+
+int c = a * b
+
+immutable int D = b - c //immutable means this is a constant. It can never be
+                        //changed
+
+println(c)
+
+function int add() {
+
+  immutable int A = int(1.0 + 2)
+
+  return A
+}
+
+println(string(add());
+
+struct person {
+  string firstName
+  protected string lastName //protected keyword prevents the value of the variable being
+                            //written to without the use of an explicitly defined setter.
+                            //However, the value is accessible as any other field:
+                            //string ln = otherPerson.lastName;
+  protected int age
+  override setAge(int age){
+    if (age > 0 && age < 120){
+      this.age = age //When an argument is passed with the same name as a member variable,
+                     //a use is assumed to be of the argument unless 'this.' is used.
+      return true
+    }
+    println("Not possible to have a negative age, and ages over 120 are unlikely to be valid.\n
+          If you are certain your age is correct, please contact and administrator to override this message.") //Strings wrap over lines automatically without ':'
+    return false
+  }
+  string address
+  string telephoneNumber
+}
+
+@override person.setAge()
+function bool setAge(int newAge){
+  if newAge <= 120 && true{
+    person.age = newAge
+    return true
+  }
+  else{
+    println("ERROR::New age is too old")
+    return false
+  }
+}
+
+struct household {
+  string name
+  person&[] people
+  string address
+}
+
+me = person("Whoever", "Solatis", 128, "256 London", "0123456789")
+
+//*
+Multi-line
+comment
+here!
+*//
+
+function household makeHousehold(person[] people){
+  numberOfPeople = people.length()
+  use numberOfPeople {
+    if numberOfPeople >= 12 || false
+      println("ERROR::TOO MANY PEOPLE")
+    if (numberOfPeople >= 12) println("ERROR::TOO MANY PEOPLE") //if statement
+                                                                //do statement
+  }
+
+  for i in range(1, people.length()){ //range does not include the upper bound,
+                                      //does include lower bound
+    if people[i].address != people[0].address {
+      println("ERROR::NOT EVERYONE LIVES AT THE SAME ADDRESS")
+      return null
+    }
+  }
+  household newHouse = household()
+  newHouse.name = people[0].lastName
+  newHouse.people = people
+  newHouse.address = people[0].address
+
+  return newHouse
+}
+
+proc changeAddress(household& household, string newAddress){
+  if !(mapSearch.findAddress(newAddress)){
+    println("New address does not exist")
+    pass
+  }
+
+  household&.address = newAddress
+}
+
+household myHouse = makeHousehold([me]); println("We live at " + : //The : token
+  myHouse.address + ".")                 //indicates that the current statement
+                                         //or the next statement will continue
+                                         //on the next line. This is the same
+                                         //for all loops/decisions as well,
+                                         //but will not include more than one
+                                         //statement in the block. Curly braces
+                                         //can be used to define the size of the
+                                         //block
+
+household myHouse = makeHousehold([me]); println("We live at" + :
+  myHouse.address + ".");
+
+changeAddress(ref(myHouse), "512 Robinson Crescent"); println("Now we live at " + :
+  myHouse.address + ".")
+
+//at * <- val -> & address. & denotes that something is a pointer, and takes
+//the address of a variable. * dereferences a pointer. All are postpended to the
+//variable or type in all circumstances.
+int[] integer = {12, 13, 14};
+int& integerPointer = integer[0]&; //Different to integer&[0], although in this case
+                                   //it should have the same effect.
+integerPointer += sizeof(int); //Add the size of an integer to the pointer, to go to 
+                               //the next in the array
+
+if integer[1] == integerPointer*
+  println("Pointers work!")
+
+function int[] range(int upperBound) {
+  int[] array = int[upperBound]
+  int index = 0
+  while index < upperBound {
+    array[index] = index
+    index++
+  }
+
+  return array
+}
+
+function int[] range(int lowerBound, int upperBound) { //Function overloading
+  int[] array = int[upperBound-lowerBound]    //has the same name, but takes a
+  int index = lowerBound                      //different set of parameters
+  while index < upperBound {
+    array[index] = index
+    index++
+  }
+
+  return array
+}
+}
+
+Household.person person = new Household.person("Whoever", "Solatis", 128, "256 London", "0123456789")
+

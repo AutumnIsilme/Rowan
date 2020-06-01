@@ -1,0 +1,101 @@
+#import rand;
+
+#main {
+    grid : uint[10][10] = 0; //Snake pairs will be consecutive numbers in the grid
+    //Where an array is set to a single value, all positions in the array will be initialized
+    //to this value.
+
+    snake_head_probability := 0.05;
+    ladder_start_probability := 0.05;
+    nothing_probability := 0.9;
+
+    ghsdf : int;
+    ghsdf : 42; //Constant definition? - I can declare a thing that might be a variable or a constant, then make it immutable later.
+                //If it is already mutable, it must remain mutable, and if it is defined immutable, it cannot change by definition
+    foo :: 42;
+    bar : float = 42;
+
+    for i := 0..9 {
+        for j := 0..9 {
+            p_result := random(); //Defaults double between 0 and 1
+            if p_result <= snake_head_probability |grid, i, j| {
+                grid[i][j] = i << 2 + j + 1;
+                
+            }
+            else if p_result <= snake_head_probability + ladder_start_probability {
+
+            }
+        }
+    }
+}
+
+a : struct {
+    num_legs: int;
+}: {7};
+#run printf("The number of legs that a has is: {0}", a.num_legs); //Compile time execution
+
+roll_dice :: () => u8, u8 || { //Multiple return values
+    d_1 := randint(1,6); //Includes both endpoints
+    d_2 := randint(1,6);
+    file := open(filepath);
+    defer close(file);
+
+    return d_1, d_2;
+}
+
+#run { //Necessary to run global scope instructions. 
+    if true a :: () => u8, u8 {
+
+    }
+
+    c : (int, int) => string;
+    c = my_func;
+    print(c(1, 2));
+}
+
+my_struct :: struct {
+
+}
+
+
+
+/*
+[<identifier> <setter operator (::, :=, =)>]? <block labels> {
+    <body>
+}
+
+/*
+typedef <identifier> struct {
+    <body>
+}
+*/ Let this exist? Also nested block comments
+
+If an identifier and setter is present, then the block will be 'called' whenever the identifier is used
+If not, then depending on what block labels are present, the block may or may not be executed.
+e.g.
+
+() {
+    print('a);
+} () //Call a function (or in this case, a function block)
+
+will print the character 'a' because a function block is called. No idea why anyone would do this. They could just do:
+
+|| {
+    print('a);
+}
+
+
+<block labels>:
+<primary> <secondary>
+
+<primary>:
+function: (args) => rvs
+struct: struct
+enum: enum <type>
+#main, #build
+
+<secondary>:
+#body, #run, ||
+
+*/
+

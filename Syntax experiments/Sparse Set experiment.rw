@@ -1,0 +1,57 @@
+SparseSet : struct {
+    capacity : u32 = ---;
+    max_val : s32 = ---;
+    n : i32;
+    sparse : s32[] = ---; //indexes
+    dense  : s32[] = ---; //Data
+}
+
+createSparseSet : (max_val: s32, cap: u32) -> (^SparseSet) {
+    return alloc SparseSet {
+        sparse[max_val+1], 
+        dense[cap]
+    }
+    //sparse = alloc [max_val+1]int;
+    //dense = alloc [cap]int;
+}
+
+foo : () -> (^^SparseSet) {
+    return alloc SparseSet{sparse[5], dense[52]}[5]; //Allocate an array of 5 sparse sets where the length of 
+}
+
+searchSparseSet : (using set: ^SparseSet, x: s32) {
+    if x > max_val {
+        return -1;
+    }
+
+    if sparse[x] < n && dense[sparse[x]] == x {
+        return (sparse[x]);
+    }
+
+    return -1;
+}
+
+insertSparseSet : (using set: ^SparseSet, x: s32) {
+
+}
+
+Componenet : limited_pointer;
+FunctionalityComponent : limited_pointer //Not engine type, user defined for some purpose in whatever they are doing
+//Limited pointers are similar to empty interfaces in Java, allowing a reference to an object of unknown type to be
+//a member of a limited set of types rather than just a void*.
+//Runtime type information allows the referencer to find what type the pointer actually points to and take action based
+//on this.
+
+Sittable : struct < Component, FunctionalityComponent {
+    occupied : bool;
+    currently_interactable : bool;
+    sit_height : f32;
+}
+
+bar : (component: ^Component) -> () {
+    if component.type == Sittable {
+        do_sittable_stuff(cast(Sittable, component));
+    }
+
+    createSparseSet(ENTITY_MAX, ENTITY_MAX)
+}
