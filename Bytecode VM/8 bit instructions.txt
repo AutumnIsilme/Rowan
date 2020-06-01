@@ -1,0 +1,48 @@
+r0
+...
+r12
++ acc
++ pc
++ status bits
+
+32 bits, or 4 byte values.
+
+4 bits to reference a register. 8 bits for instruction.
+
+[0] nop 1w (0.5w)
+
+[1] Add register 1w
+[2] Sub register 1w
+[3] Asl register 1w
+[4] Asr register 1w
+
+[5] Load to register from memory 5/6w
+[6] Store from register to memory 5/6w
+[7] Push from register 1w
+[8] Pop to register 1w
+
+[9] Output register as number 1w
+[A] Output register as char 1w
+[B0..3] Copy memory 8w (7.5w)
+[C0] Copy register 2w (1.5w)
+
+
+[FF] halt 1w
+
+cmp registers
+
+
+00000000 0000 0000
+instr    r1   r2
+
+00000000 00000000 00000000 00000000
+memory address
+
+
+0110 0000 0xf719ed9a
+
+B0 memcpy <addr> <addr> 9w
+B1 memcpy <indr addr> <addr> 9w
+B2 memcpy <addr> <indr addr> 9w
+B3 memcpy <indr addr> <indr addr> 9w
+BA cmp <r1, r2> 2w

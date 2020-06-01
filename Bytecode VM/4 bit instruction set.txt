@@ -1,0 +1,36 @@
+[0] nop 1w (0.5w)
+
+[1] Add register 1w
+[2] Sub register 1w
+[3] Asl register 1w
+[4] Asr register 1w
+
+[5] Load to register from memory 5/6w
+[6] Store from register to memory 5/6w
+[7] Push from register 1w
+[8] Pop to register 1w
+
+[9] Output register as number 1w
+[A] Output register as char 1w
+[B] Copy memory 8w (7.5w)
+[C] Copy register 2w (1.5w)
+
+[D] brn (non-zero) 5w
+[E] brz 5w
+[F] halt 1w (0.5w)
+
+5w instructions:
+0000 0000 0000 0000 00000000 00000000 00000000
+op   reg  addr null address
+          mode
+
+Copy memory:
+1111 0000 0000 0000 11111111 11111111 11111111 11111111 11111111 11111111
+op   null addr addr address                    address
+          mode mode
+
+Copy register
+1111 0000 1111 1111
+op   null r1   r2
+
+Address modes:
