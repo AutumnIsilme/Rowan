@@ -1,4 +1,16 @@
 
+#Folders
 .DS_Store
-
 Bytecode VM/Bytecode VM/Bytecode VM.xcodeproj/
+Compiler/build/.vs/
+
+#Editor files
+Rowan.code-workspace
+.vscode/settings.json
+
+#Build files
+*.obj
+*.ilk
+*.pdb
+*.exe
+*.out

@@ -1,0 +1,1 @@
+clang -o build/rwc.out src/main.cpp
