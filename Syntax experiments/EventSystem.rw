@@ -149,7 +149,7 @@ module AutoFreeDemo {
 
         string input_val = "";
         while input_val != "q" {
-            println("Enter a position and )
+            println("Enter a position and ")
             input_val = stdin();
             
         }

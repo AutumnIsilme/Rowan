@@ -1,7 +1,7 @@
 SparseSet : struct {
     capacity : u32 = ---;
     max_val : s32 = ---;
-    n : i32;
+    n : s32;
     sparse : s32[] = ---; //indexes
     dense  : s32[] = ---; //Data
 }
