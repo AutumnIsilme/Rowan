@@ -1,1 +1,1 @@
-clang -o build/rwc.out src/main.cpp
+clang -o build/rwc.out src/main.cpp src/Lexer.cpp
