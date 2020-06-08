@@ -82,7 +82,7 @@ void Lexer::make_tokens(const std::string& input_string) {
         char c = input_string[i];
 
         switch (c) {
-            case '\n': {
+            case '\n': case '\r': {
                 make_token(intermediate);
                 intermediate = "";
                 line_number++;

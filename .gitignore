@@ -3,10 +3,12 @@
 .DS_Store
 Bytecode VM/Bytecode VM/Bytecode VM.xcodeproj/
 Compiler/build/.vs/
+Compiler/.vs/
 
 #Editor files
 Rowan.code-workspace
 .vscode/settings.json
+Compiler/rwc.sln
 
 #Build files
 *.obj
