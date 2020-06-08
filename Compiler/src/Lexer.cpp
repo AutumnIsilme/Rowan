@@ -36,7 +36,7 @@ void Lexer::make_token(const std::string& token) {
                     }
                     is_float = true;
                 }
-                else if (c <= '0' || c >= '9') {
+                else if (c < '0' || c > '9') {
                     is_invalid = true;
                 }
             }
@@ -78,7 +78,7 @@ void Lexer::make_tokens(const std::string& input_string) {
     //std::vector<std::string> splitDuoStrings = { "/*", "*/", "//", "**", "&&", "==", "!=", "<=", ">=", "<<", ">>", "<-", "->", "||", "++", "--", "+=", "-=" };
 
     int i = 0;
-    for (i; i < input_string.length();) {
+    for (; i < input_string.length();) {
         char c = input_string[i];
 
         switch (c) {
@@ -190,7 +190,11 @@ void Lexer::make_tokens(const std::string& input_string) {
                     tokens->push_back(Token(TT_MINUS_EQUALS, line_number, column_number, "-="));
                     column_number += 2;
                     i += 2;
-                } else {
+                } else if (c2 == '>') {
+                    tokens->push_back(Token(TT_MINUS_GT, line_number, column_number, "->"));
+                    column_number += 2;
+                    i += 2;
+                }else {
                     tokens->push_back(Token(TT_MINUS, line_number, column_number, "-"));
                     column_number++;
                     i++;
