@@ -9,13 +9,21 @@
 #include "Token.h"
 
 struct Lexer {
-    static std::vector<Token> tokens;
-    static std::vector<Error> errors;
-    static u32 line_number;
-    static u32 column_number;
+    std::vector<Token>* tokens;
+    std::vector<Error> errors;
+    u32 line_number;
+    u32 column_number;
 
-    static void make_tokens(const std::string& input_string);
-    static void make_token(const std::string& token);
+    u32 comment_depth = 0;
+    bool line_comment = false;
+
+    void make_tokens(const std::string& input_string);
+    void make_token(const std::string& token);
+
+    ~Lexer() {
+        if (tokens)
+            delete tokens;
+    }
 };
 
 #endif /* LEXER_H_GUARD */

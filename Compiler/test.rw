@@ -1,0 +1,7 @@
+/* This is a test file designed to test out the lexer! */
+
+if true {
+    print("Hello, World!")
+} else {
+
+}

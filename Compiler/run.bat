@@ -3,6 +3,4 @@ call build.bat
 echo. 
 echo ------------ Finished build ------------
 echo.
-pushd build
-rwc.exe
-popd
+"build/rwc.exe"
