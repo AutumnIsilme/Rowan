@@ -8,22 +8,24 @@ helpfunc()
     exit 1
 }
 
-rm -rf build
-mkdir build
-while getopts "rh" opt
+while getopts "rdh" opt
 do
     case "$opt" in
         r ) parameterR=1 ;;
+        d ) parameterR=0 ;;
         h ) helpfunc ;;
         ? ) helpfunc ;;
     esac
 done
 
-if [ -z "$parameterR" ]; then
+rm -rf build
+mkdir build
+
+if [ $parameterR -eq 0 ]; then
     echo
     echo ------------ Building debug ------------
     echo
-    clang++ -O2 -o build/rwc.out src/main.cpp src/Lexer.cpp
+    clang++ -O0 -o build/rwc.out src/main.cpp src/Lexer.cpp
     exit $?
 else
     echo
