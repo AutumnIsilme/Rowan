@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     printf("Make tokens: %f\n", timer.elapsed());
     timer.reset();
 
-    printf("%d\n", lexer.tokens->size());
+    printf("%zu\n", lexer.tokens->size());
     for (auto token : *lexer.tokens) {
         printf("[%s: %s]\n", token_type_names[(u16)token.type], token.contents.c_str());
     }

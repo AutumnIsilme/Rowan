@@ -392,7 +392,7 @@ void Lexer::make_tokens(const std::string& input_string) {
                 make_token(intermediate);
                 intermediate = "";
                 if (input_string[i+1] == '\\') {
-                    tokens->push_back(Token(TT_CHAR, line_number, column_number, "\\" + input_string[i+2]));
+                    tokens->push_back(Token(TT_CHAR, line_number, column_number, "\\" + std::string(1, input_string[i+2])));
                     i += 3;
                 } else {
                     tokens->push_back(Token(TT_CHAR, line_number, column_number, std::string(1, input_string[i+1])));
