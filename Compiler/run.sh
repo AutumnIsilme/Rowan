@@ -1,2 +1,9 @@
 ./build.sh
-./build/rwc.out
+if [ $? -eq 0 ]; then
+    echo
+    echo ------------ Finished build ------------
+    echo
+    ./build/rwc.out
+else
+    echo Build failed
+fi
