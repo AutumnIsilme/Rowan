@@ -4,6 +4,7 @@
 Bytecode VM/Bytecode VM/Bytecode VM.xcodeproj/
 Compiler/build/.vs/
 Compiler/.vs/
+Compiler/rwc/target/
 
 #Editor files
 Rowan.code-workspace
