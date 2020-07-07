@@ -4,9 +4,6 @@ use std::convert::TryFrom;
 pub struct Lexer {
     pub line_number: u32,
     pub column_number: u32,
-
-    pub comment_depth: u32,
-    pub line_comment: bool,
 }
 
 impl Lexer {
@@ -14,15 +11,11 @@ impl Lexer {
         return Lexer {
             line_number: 0,
             column_number: 0,
-            comment_depth: 0,
-            line_comment: false,
         }
     }
 
     pub fn make_tokens(&mut self, input_string: &str) -> (Vec<Token>, Vec<Error>) {
-        let mut tokens_master: Vec<Token> = Vec::new();
-        let mut tokens_discard: Vec<Token> = Vec::new();
-        let mut tokens: &mut Vec<Token> = &mut tokens_master;
+        let mut tokens: Vec<Token> = Vec::new();
         let mut errors: Vec<Error> = Vec::new();
         
         self.line_number = 1;
@@ -40,86 +33,74 @@ impl Lexer {
 
             match c {
                 '\n' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     self.line_number += 1;
                     self.column_number = 1;
                     i += 1;
-                    if self.line_comment {
-                        self.comment_depth -= 1;
-                        if self.comment_depth == 0 {
-                            tokens = &mut tokens_master;
-                        }
-                    }
                 },
                 '\r' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     self.column_number += 1;
                     i += 1;
-                    if self.line_comment {
-                        self.comment_depth -= 1;
-                        if self.comment_depth == 0 {
-                            tokens = &mut tokens_master;
-                        }
-                    }
                 }
                 ' ' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     self.column_number += 1;
                     i += 1;
                 },
                 '\t' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     self.column_number += 4;
                     i += 1;
                 },
                 '(' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::LPAREN, self.line_number, self.column_number, "("));
                     self.column_number += 1;
                     i += 1;
                 },
                 ')' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::RPAREN, self.line_number, self.column_number, ")"));
                     self.column_number += 1;
                     i += 1;
                 },
                 '[' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::LSQUARE, self.line_number, self.column_number, "["));
                     self.column_number += 1;
                     i += 1;
                 },
                 ']' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::RSQUARE, self.line_number, self.column_number, "]"));
                     self.column_number += 1;
                     i += 1;
                 },
                 '{' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::LCURLY, self.line_number, self.column_number, "{"));
                     self.column_number += 1;
                     i += 1;
                 },
                 '}' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::RCURLY, self.line_number, self.column_number, "}"));
                     self.column_number += 1;
                     i += 1;
                 },
                 '+' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     let c2 = match input_string.chars().nth(i+1) {
                         Some(k) => k,
@@ -140,7 +121,7 @@ impl Lexer {
                     }
                 },
                 '-' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     let c2 = match input_string.chars().nth(i+1) {
                         Some(k) => k,
@@ -165,7 +146,7 @@ impl Lexer {
                     }
                 },
                 '/' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     let c2 = match input_string.chars().nth(i+1) {
                         Some(k) => k,
@@ -173,20 +154,17 @@ impl Lexer {
                     };
                     if c2 == '*' {
                         //tokens = &mut tokens_discard;
-                        self.comment_depth += 1;
                         self.column_number += 2;
                         i += 2;
-                        self.consume_comments(&mut errors, input_string, &mut i);
+                        self.consume_comments(&mut errors, input_string, &mut i, false);
                     } else if c2 == '/' {
-                        if self.comment_depth == 0
-                        {
-                            tokens = &mut tokens_discard;
-                        }
-                        self.comment_depth += 1;
-                        self.line_comment = true;
+                        //if self.comment_depth == 0
+                        //{
+                            //tokens = &mut tokens_discard;
+                        //}
                         i += 2;
                         self.column_number += 2;
-                        self.consume_comments(&mut errors, input_string, &mut i);
+                        self.consume_comments(&mut errors, input_string, &mut i, true);
                     } else {
                         tokens.push(Token::create(TokenType::SLASH, self.line_number, self.column_number, "/"));
                         self.column_number += 1;
@@ -194,25 +172,13 @@ impl Lexer {
                     }
                 },
                 '*' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     let c2 = match input_string.chars().nth(i+1) {
                         Some(k) => k,
                         None => ' ',
                     };
-                    if c2 == '/' {
-                        if self.comment_depth != 0 {
-                            self.comment_depth -= 1;
-                            if self.comment_depth == 0 {
-                                tokens = &mut tokens_master;
-                            }
-                        } else {
-                            tokens.push(Token::create(TokenType::STAR, self.line_number, self.column_number, "*"));
-                            tokens.push(Token::create(TokenType::SLASH, self.line_number, self.column_number, "/"));
-                        }
-                        self.column_number += 2;
-                        i += 2;
-                    } else if c2 == '*' {
+                    if c2 == '*' {
                         tokens.push(Token::create(TokenType::STAR_STAR, self.line_number, self.column_number, "**"));
                         self.column_number += 2;
                         i += 2;
@@ -223,7 +189,7 @@ impl Lexer {
                     }
                 },
                 '!' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     if match input_string.chars().nth(i+1) { Some(k) => k, None => ' ' } == '=' {
                         tokens.push(Token::create(TokenType::EXCL_EQUAL, self.line_number, self.column_number, "!="));
@@ -236,7 +202,7 @@ impl Lexer {
                     }
                 },
                 '=' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     if match input_string.chars().nth(i+1) { Some(k) => k, None => ' ' } == '=' {
                         tokens.push(Token::create(TokenType::EQUAL_EQUAL, self.line_number, self.column_number, "=="));
@@ -249,17 +215,17 @@ impl Lexer {
                     }
                 },
                 '%' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::PERCENT, self.line_number, self.column_number, "%"));
                 },
                 '^' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::CARET, self.line_number, self.column_number, "^"));
                 },
                 '&' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     if match input_string.chars().nth(i+1) { Some(k) => k, None => ' ' } == '&' {
                         tokens.push(Token::create(TokenType::AMPERSAND_AMPERSAND, self.line_number, self.column_number, "&&"));
@@ -272,7 +238,7 @@ impl Lexer {
                     }
                 },
                 '|' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     if match input_string.chars().nth(i+1) { Some(k) => k, None => ' ' } == '|' {
                         tokens.push(Token::create(TokenType::PIPE_PIPE, self.line_number, self.column_number, "||"));
@@ -285,7 +251,7 @@ impl Lexer {
                     }
                 },
                 '<' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     let c2 = match input_string.chars().nth(i+1) {
                         Some(k) => k,
@@ -306,7 +272,7 @@ impl Lexer {
                     }
                 },
                 '>' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     let c2 = match input_string.chars().nth(i+1) {
                         Some(k) => k,
@@ -327,40 +293,36 @@ impl Lexer {
                     }
                 },
                 ',' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::COMMA, self.line_number, self.column_number, ","));
                     self.column_number += 1;
                     i += 1;
                 },
                 '"' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
-                    if self.comment_depth == 0 {
-                        i += 1;
-                        let mut c2 = match input_string.chars().nth(i) { Some(k) => k, None => ' ' };
-                        while c2 != '"' {
+                    i += 1;
+                    let mut c2 = match input_string.chars().nth(i) { Some(k) => k, None => ' ' };
+                    while c2 != '"' {
+                        c2 = match input_string.chars().nth(i) { Some(k) => k, None => ' ' };
+                        while c2 != '\\' && c2 != '"' {
+                            intermediate.push(c2);
+                            i += 1;
                             c2 = match input_string.chars().nth(i) { Some(k) => k, None => ' ' };
-                            while c2 != '\\' && c2 != '"' {
-                                intermediate.push(c2);
-                                i += 1;
-                                c2 = match input_string.chars().nth(i) { Some(k) => k, None => ' ' };
-                            }
-                            if c2 == '\\' {
-                                intermediate.push(c2);
-                                intermediate.push(match input_string.chars().nth(i+1) { Some(k) => k, None => ' ' });
-                                i += 2;
-                            }
                         }
-                        i += 1;
-                        tokens.push(Token::create(TokenType::STRING, self.line_number, self.column_number, intermediate.as_str()));
-                        intermediate.clear();
-                    } else {
-                        i += 1;
+                        if c2 == '\\' {
+                            intermediate.push(c2);
+                            intermediate.push(match input_string.chars().nth(i+1) { Some(k) => k, None => ' ' });
+                            i += 2;
+                        }
                     }
+                    i += 1;
+                    tokens.push(Token::create(TokenType::STRING, self.line_number, self.column_number, intermediate.as_str()));
+                    intermediate.clear();
                 },
                 '\'' => {
-                    self.make_token(tokens, &mut errors,  intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                     intermediate.clear();
                     if match input_string.chars().nth(i+1) { Some(k) => k, None => ' ' } == '\\' {
                         tokens.push(Token::create(TokenType::CHAR, self.line_number, self.column_number, format!("\\{}", match input_string.chars().nth(i+2) { Some(k) => k, None => ' ' }).as_str()));
@@ -374,7 +336,7 @@ impl Lexer {
                     if intermediate.chars().nth(0).unwrap() >= '0' && intermediate.chars().nth(0).unwrap() <= '9' {
                         intermediate.push(c);
                     } else {
-                        self.make_token(tokens, &mut errors,  intermediate.as_str());
+                        self.make_token(&mut tokens, &mut errors,  intermediate.as_str());
                         intermediate.clear();
                         tokens.push(Token::create(TokenType::DOT, self.line_number, self.column_number, "."));
                     }
@@ -401,7 +363,7 @@ impl Lexer {
                     }
                 },
                 ';' => {
-                    self.make_token(tokens, &mut errors, intermediate.as_str());
+                    self.make_token(&mut tokens, &mut errors, intermediate.as_str());
                     intermediate.clear();
                     tokens.push(Token::create(TokenType::SEMICOLON, self.line_number, self.column_number, ";"));
                     self.column_number += 1;
@@ -415,12 +377,14 @@ impl Lexer {
             }
         }
 
-        return (tokens_master, errors);
+        return (tokens, errors);
     }
 
-    fn consume_comments(&mut self, errors: &mut Vec<Error>, input_string: &str, i: &mut usize) {
+    fn consume_comments(&mut self, errors: &mut Vec<Error>, input_string: &str, i: &mut usize, line_comment: bool) {
+        let mut comment_depth = 1;
+        let mut line_comment = line_comment;
         loop {
-            if self.comment_depth == 0 {
+            if comment_depth == 0 {
                 break;
             }
             
@@ -430,9 +394,9 @@ impl Lexer {
             }};
             match c {
                 '\n' => {
-                    if self.line_comment {
-                        self.line_comment = false;
-                        self.comment_depth -= 1;
+                    if line_comment {
+                        line_comment = false;
+                        comment_depth -= 1;
                     }
                     self.line_number += 1;
                     self.column_number = 1;
@@ -444,14 +408,14 @@ impl Lexer {
                         break;
                     }};
                     if c2 == '/' {
-                        if !self.line_comment {
-                            self.line_comment = true;
-                            self.comment_depth += 1;
+                        if !line_comment {
+                            line_comment = true;
+                            comment_depth += 1;
                         }
                         self.column_number += 2;
                         *i += 2;
                     } else if c2 == '*' {
-                        self.comment_depth += 1;
+                        comment_depth += 1;
                         self.column_number += 2;
                         *i += 2;
                     } else {
@@ -465,8 +429,8 @@ impl Lexer {
                         break;
                     }};
                     if c2 == '/' {
-                        if (self.comment_depth > 0 &&! self.line_comment) || self.comment_depth > 1 {
-                            self.comment_depth -= 1;
+                        if (comment_depth > 0 &&! line_comment) || comment_depth > 1 {
+                            comment_depth -= 1;
                         }
                         self.column_number += 2;
                         *i += 2;
@@ -488,7 +452,7 @@ impl Lexer {
     }
 
     fn make_token(&self, tokens: &mut Vec<Token>, errors: &mut Vec<Error>, token: &str) {
-        if token.len() == 0 || self.comment_depth != 0 {
+        if token.len() == 0 {
             return;
         }
 
