@@ -373,6 +373,18 @@ impl Lexer {
                     intermediate.push(c);
                     self.column_number += 1;
                     i += 1;
+                    loop {
+                        let c = match input_string.chars().nth(i) {
+                            Some(k) => k,
+                            None => break,
+                        };
+                        if (c < '0' && c != '.') || (c > '9' && c < 'A') || (c > 'Z' && c < 'a' && c != '_') || c > 'z' {
+                            break;
+                        }
+                        intermediate.push(c);
+                        self.column_number += 1;
+                        i += 1;
+                    }
                 }
             }
         }
@@ -506,6 +518,31 @@ impl Lexer {
 
         if !is_invalid {
             tokens.push(Token::create(token_type, self.line_number, self.column_number - token.len() as u32, token));
+        }
+    }
+
+    pub fn make_tokens_2(&mut self, input_string: &str) -> (Vec<Token>, Vec<Error>) {
+        let mut tokens: Vec<Token> = Vec::new();
+        let mut errors: Vec<Error> = Vec::new();
+        
+        self.line_number = 1;
+        self.column_number = 1;
+        let mut intermediate = String::with_capacity(127);
+
+        println!("Input length: {}", input_string.len());
+
+        let mut i: usize = 0;
+        loop {
+            let c = match input_string.chars().nth(i) {
+                Some(c) => c,
+                None => break,
+            };
+
+            match c {
+                _ => {
+
+                }
+            }
         }
     }
 }

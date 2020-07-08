@@ -1,170 +1,159 @@
-use num_enum::TryFromPrimitive;
+use logos::Logos;
 
-pub struct Token {
-    pub token_type: TokenType,
-    pub line_number: u32,
-    pub column_number: u32,
-    pub contents: String,
-}
-
-impl Token {
-    pub fn create(token_type: TokenType, line_number: u32, column_number: u32, contents: &str) -> Token {
-        return Token {
-            token_type: token_type,
-            line_number: line_number,
-            column_number: column_number,
-            contents: String::from(contents),
-        }
-    }
-}
-
-#[allow(dead_code)]
+#[derive(Logos, Debug, PartialEq, Clone, Copy)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, TryFromPrimitive)]
-#[derive(PartialEq)]
-#[repr(usize)]
-pub enum TokenType {
-    /* Keywords */
-    IF = 0,
+pub enum Token {
+    #[token("if")]
+    IF,
+    #[token("for")]
     FOR,
+    #[token("while")]
     WHILE,
+    #[token("return")]
     RETURN,
+    #[token("break")]
     BREAK,
+    #[token("continue")]
     CONTINUE,
+    #[token("switch")]
     SWITCH,
+    #[token("case")]
     CASE,
+    #[token("include")]
     INCLUDE,
+    #[token("usion")]
     USING,
+    #[token("cast")]
     CAST,
+    #[token("struct")]
     STRUCT,
+    #[token("enum")]
     ENUM,
+    #[token("union")]
     UNION,
+    #[token("soa")]
     SOA,
 
+    #[token("true")]
     TRUE,
+    #[token("false")]
     FALSE,
 
-    /* Operators and symbols*/
+    #[token("(")]
     LPAREN,
+    #[token(")")]
     RPAREN,
+    #[token("[")]
     LSQUARE,
+    #[token("]")]
     RSQUARE,
+    #[token("{")]
     LCURLY,
+    #[token("}")]
     RCURLY,
 
+    #[token("++")]
     PLUS_PLUS,
+    #[token("+=")]
     PLUS_EQUALS,
+    #[token("+")]
     PLUS,
 
+    #[token("--")]
     MINUS_MINUS,
+    #[token("-=")]
     MINUS_EQUALS,
+    #[token("->")]
     MINUS_GT,
+    #[token("-")]
     MINUS,
 
+    #[token("//")]
+    SLASH_SLASH,
+    #[token("/*")]
+    SLASH_STAR,
+    #[token("/")]
     SLASH,
 
+    #[token("**")]
     STAR_STAR,
+    #[token("*/")]
+    STAR_SLASH,
+    #[token("*")]
     STAR,
 
+    #[token("!=")]
     EXCL_EQUAL,
+    #[token("!")]
     EXCL,
 
+    #[token("==")]
     EQUAL_EQUAL,
+    #[token("=")]
     EQUAL,
 
+    #[token("%")]
     PERCENT,
+    #[token("^")]
     CARET,
 
+    #[token("&&")]
     AMPERSAND_AMPERSAND,
+    #[token("&")]
     AMPERSAND,
 
+    #[token("||")]
     PIPE_PIPE,
+    #[token("|")]
     PIPE,
 
+    #[token("<=")]
     LT_EQUAL,
+    #[token("<<")]
     LT_LT,
+    #[token("<")]
     LT,
 
+    #[token(">=")]
     GT_EQUAL,
+    #[token(">>")]
     GT_GT,
+    #[token(">")]
     GT,
 
+    #[token(",")]
     COMMA,
 
+    #[token(".")]
     DOT,
 
+    #[token(":=")]
     COLON_EQUALS,
+    #[token("::")]
     COLON_COLON,
+    #[token(":")]
     COLON,
+    #[token(";")]
     SEMICOLON,
 
     /* Other token types*/
+    #[regex(r"[a-zA-Z_][a-zA-Z0-9_]*")]
     IDENT,
+    #[regex(r"-?[0-9][0-9]?[0-9]?([0-9]+|(_[0-9][0-9][0-9])*)")]
     INT,
+    #[regex(r"-?[0-9][0-9]?[0-9]?([0-9]+|(_[0-9][0-9][0-9])*)\\.[0-9]+")]
     FLOAT,
+    #[regex("\"([^\"]|(\\\\\")|(\\n))*\"")]
     STRING,
+    #[regex(r"'([^\\]|\\.)")]
     CHAR,
-}
 
-pub static TOKEN_TYPE_NAMES: [&str; 60] = [
-    "IF",
-    "FOR",
-    "WHILE",
-    "RETURN",
-    "BREAK",
-    "CONTINUE",
-    "SWITCH",
-    "CASE",
-    "INCLUDE",
-    "USING",
-    "CAST",
-    "STRUCT",
-    "ENUM",
-    "UNION",
-    "SOA",
-    "TRUE",
-    "FALSE",
-    "LPAREN",
-    "RPAREN",
-    "LSQUARE",
-    "RSQUARE",
-    "LCURLY",
-    "RCURLY",
-    "PLUS_PLUS",
-    "PLUS_EQUALS",
-    "PLUS",
-    "MINUS_MINUS",
-    "MINUS_EQUALS",
-    "MINUS_GT",
-    "MINUS",
-    "SLASH",
-    "STAR_STAR",
-    "STAR",
-    "EXCL_EQUAL",
-    "EXCL",
-    "EQUAL_EQUAL",
-    "EQUAL",
-    "PERCENT",
-    "CARET",
-    "AMPERSAND_AMPERSAND",
-    "AMPERSAND",
-    "PIPE_PIPE",
-    "PIPE",
-    "LT_EQUAL",
-    "LT_LT",
-    "LT",
-    "GT_EQUAL",
-    "GT_GT",
-    "GT",
-    "COMMA",
-    "DOT",
-    "COLON_EQUALS",
-    "COLON_COLON",
-    "COLON",
-    "SEMICOLON",
-    "IDENT",
-    "INT",
-    "FLOAT",
-    "STRING",
-    "CHAR",
-];
+    #[token("\n")]
+    NEWLINE,
+
+    #[error]
+    #[regex(r"[ \t\r\f]+", logos::skip)]
+    Error,
+
+    EOF,
+}
