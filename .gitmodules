@@ -1,0 +1,3 @@
+[submodule "Compiler/vendor/logos"]
+	path = Compiler/vendor/logos
+	url = https://github.com/maciejhirsz/logos

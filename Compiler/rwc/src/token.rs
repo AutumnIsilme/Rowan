@@ -2,9 +2,13 @@ use logos::Logos;
 
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]
 #[allow(non_camel_case_types)]
-pub enum Token {
+#[derive(Debug, TryFromPrimitive)]
+#[derive(PartialEq, Clone, Copy)]
+#[repr(usize)]
+pub enum TokenType {
+    /* Keywords */
     #[token("if")]
-    IF,
+    IF = 0,
     #[token("for")]
     FOR,
     #[token("while")]
@@ -54,32 +58,22 @@ pub enum Token {
 
     #[token("++")]
     PLUS_PLUS,
-    #[token("+=")]
-    PLUS_EQUALS,
-    #[token("+")]
+    PLUS_EQUAL,
     PLUS,
 
     #[token("--")]
     MINUS_MINUS,
-    #[token("-=")]
-    MINUS_EQUALS,
-    #[token("->")]
+    MINUS_EQUAL,
     MINUS_GT,
     #[token("-")]
     MINUS,
 
-    #[token("//")]
-    SLASH_SLASH,
-    #[token("/*")]
     SLASH_STAR,
-    #[token("/")]
     SLASH,
 
     #[token("**")]
     STAR_STAR,
-    #[token("*/")]
     STAR_SLASH,
-    #[token("*")]
     STAR,
 
     #[token("!=")]
@@ -107,18 +101,12 @@ pub enum Token {
     #[token("|")]
     PIPE,
 
-    #[token("<=")]
-    LT_EQUAL,
-    #[token("<<")]
     LT_LT,
-    #[token("<")]
+    LT_EQUAL,
     LT,
 
-    #[token(">=")]
-    GT_EQUAL,
-    #[token(">>")]
     GT_GT,
-    #[token(">")]
+    GT_EQUAL,
     GT,
 
     #[token(",")]
@@ -127,11 +115,8 @@ pub enum Token {
     #[token(".")]
     DOT,
 
-    #[token(":=")]
-    COLON_EQUALS,
-    #[token("::")]
     COLON_COLON,
-    #[token(":")]
+    COLON_EQUAL,
     COLON,
     #[token(";")]
     SEMICOLON,
@@ -148,12 +133,74 @@ pub enum Token {
     #[regex(r"'([^\\]|\\.)")]
     CHAR,
 
-    #[token("\n")]
-    NEWLINE,
-
-    #[error]
-    #[regex(r"[ \t\r\f]+", logos::skip)]
-    Error,
-
     EOF,
+    NONE,
 }
+
+pub static TOKEN_TYPE_NAMES: [&str; 64] = [
+    "IF",
+    "FOR",
+    "WHILE",
+    "RETURN",
+    "BREAK",
+    "CONTINUE",
+    "SWITCH",
+    "CASE",
+    "INCLUDE",
+    "USING",
+    "CAST",
+    "STRUCT",
+    "ENUM",
+    "UNION",
+    "SOA",
+    "TRUE",
+    "FALSE",
+    "LPAREN",
+    "RPAREN",
+    "LSQUARE",
+    "RSQUARE",
+    "LCURLY",
+    "RCURLY",
+    "PLUS_PLUS",
+    "PLUS_EQUAL",
+    "PLUS",
+    "MINUS_MINUS",
+    "MINUS_EQUAL",
+    "MINUS_GT",
+    "MINUS",
+    "SLASH_STAR",
+    "SLASH",
+    "STAR_STAR",
+    "STAR_SLASH",
+    "STAR",
+    "EXCL_EQUAL",
+    "EXCL",
+    "EQUAL_EQUAL",
+    "EQUAL",
+    "PERCENT",
+    "CARET",
+    "AMPERSAND_AMPERSAND",
+    "AMPERSAND",
+    "PIPE_PIPE",
+    "PIPE",
+    "LT_LT",
+    "LT_EQUAL",
+    "LT",
+    "GT_GT",
+    "GT_EQUAL",
+    "GT",
+    "COMMA",
+    "DOT",
+    "COLON_COLON",
+    "COLON_EQUALS",
+    "COLON",
+    "SEMICOLON",
+    "IDENT",
+    "INT",
+    "FLOAT",
+    "STRING",
+    "CHAR",
+
+    "EOF",
+    "NONE",
+];
