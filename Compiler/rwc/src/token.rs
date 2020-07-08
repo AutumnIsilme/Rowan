@@ -21,7 +21,7 @@ impl Token {
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, TryFromPrimitive)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 #[repr(usize)]
 pub enum TokenType {
     /* Keywords */
@@ -53,17 +53,19 @@ pub enum TokenType {
     RCURLY,
 
     PLUS_PLUS,
-    PLUS_EQUALS,
+    PLUS_EQUAL,
     PLUS,
 
     MINUS_MINUS,
-    MINUS_EQUALS,
+    MINUS_EQUAL,
     MINUS_GT,
     MINUS,
 
+    SLASH_STAR,
     SLASH,
 
     STAR_STAR,
+    STAR_SLASH,
     STAR,
 
     EXCL_EQUAL,
@@ -81,20 +83,20 @@ pub enum TokenType {
     PIPE_PIPE,
     PIPE,
 
-    LT_EQUAL,
     LT_LT,
+    LT_EQUAL,
     LT,
 
-    GT_EQUAL,
     GT_GT,
+    GT_EQUAL,
     GT,
 
     COMMA,
 
     DOT,
 
-    COLON_EQUALS,
     COLON_COLON,
+    COLON_EQUAL,
     COLON,
     SEMICOLON,
 
@@ -104,9 +106,12 @@ pub enum TokenType {
     FLOAT,
     STRING,
     CHAR,
+
+    EOF,
+    NONE,
 }
 
-pub static TOKEN_TYPE_NAMES: [&str; 60] = [
+pub static TOKEN_TYPE_NAMES: [&str; 64] = [
     "IF",
     "FOR",
     "WHILE",
@@ -131,14 +136,16 @@ pub static TOKEN_TYPE_NAMES: [&str; 60] = [
     "LCURLY",
     "RCURLY",
     "PLUS_PLUS",
-    "PLUS_EQUALS",
+    "PLUS_EQUAL",
     "PLUS",
     "MINUS_MINUS",
-    "MINUS_EQUALS",
+    "MINUS_EQUAL",
     "MINUS_GT",
     "MINUS",
+    "SLASH_STAR",
     "SLASH",
     "STAR_STAR",
+    "STAR_SLASH",
     "STAR",
     "EXCL_EQUAL",
     "EXCL",
@@ -150,16 +157,16 @@ pub static TOKEN_TYPE_NAMES: [&str; 60] = [
     "AMPERSAND",
     "PIPE_PIPE",
     "PIPE",
-    "LT_EQUAL",
     "LT_LT",
+    "LT_EQUAL",
     "LT",
-    "GT_EQUAL",
     "GT_GT",
+    "GT_EQUAL",
     "GT",
     "COMMA",
     "DOT",
-    "COLON_EQUALS",
     "COLON_COLON",
+    "COLON_EQUALS",
     "COLON",
     "SEMICOLON",
     "IDENT",
@@ -167,4 +174,7 @@ pub static TOKEN_TYPE_NAMES: [&str; 60] = [
     "FLOAT",
     "STRING",
     "CHAR",
+
+    "EOF",
+    "NONE",
 ];

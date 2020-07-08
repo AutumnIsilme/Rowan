@@ -17,3 +17,4 @@ Compiler/rwc.sln
 *.pdb
 *.exe
 *.out
+test_1M_lines.rw
