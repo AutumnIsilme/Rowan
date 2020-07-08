@@ -3,7 +3,11 @@ mod types;
 mod keyword_list;
 mod error;
 mod lexer;
-mod token;
+mod parser;
+//mod token;
+
+use lexer::Token;
+use parser::ASTNode;
 
 fn print_ast(ast: &Box<ASTNode>) {
     match ast.as_ref() {
@@ -28,6 +32,9 @@ fn print_ast(ast: &Box<ASTNode>) {
 }
 
 fn main() {
+    let mut lex = lexer::Lexer::create("1+2+3");
+    let ast = parser::expr(&mut lex);
+    print_ast(&ast);
     /*
     let timer = SystemTime::now();
     let path = Path::new("../test.rw");

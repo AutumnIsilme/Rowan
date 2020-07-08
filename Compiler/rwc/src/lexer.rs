@@ -52,31 +52,6 @@ impl Lexer<'_> {
     pub fn peek(&mut self) -> Token {
         self.tokens[self.token_index]
     }
-
-    pub fn make_tokens_2(&mut self, input_string: &str) -> (Vec<Token>, Vec<Error>) {
-        let mut tokens: Vec<Token> = Vec::new();
-        let mut errors: Vec<Error> = Vec::new();
-        
-        self.line_number = 1;
-        self.column_number = 1;
-        let mut intermediate = String::with_capacity(127);
-
-        println!("Input length: {}", input_string.len());
-
-        let mut i: usize = 0;
-        loop {
-            let c = match input_string.chars().nth(i) {
-                Some(c) => c,
-                None => break,
-            };
-
-            match c {
-                _ => {
-
-                }
-            }
-        }
-    }
 }
 
 #[derive(Logos, Debug, PartialEq, Clone, Copy)]

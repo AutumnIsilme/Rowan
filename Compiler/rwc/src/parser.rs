@@ -1,44 +1,22 @@
-use super::token::Token;
-use logos::Lexer;
-
-macro_rules! next {
-    ($x:ident) => {
-        match $x.next() {
-            Some(t) => {println!("{:?}",t); t},
-            _ => Token::EOF,
-        }
-    };
-}
-
-/*
-macro_rules! peek {
-    ($x:ident) => {
-        match $x.peekable().peek() {
-            Some(t) => t,
-            _ => &Token::EOF,
-        }
-    };
-}
-*/
+use super::lexer::{Lexer, Token};
 
 pub enum ASTNode {
     INFIX_OP_NODE { lhs: Box<ASTNode>, op: Token, rhs: Box<ASTNode> },
     ATOM(Token, String),
 }
 
-pub fn expr(input: &mut Lexer<Token>) -> Box<ASTNode> {
+pub fn expr(input: &mut Lexer) -> Box<ASTNode> {
     expr_bp(input, 0)
 }
 
-fn expr_bp(input: &mut Lexer<Token>, min_bp: i16) -> Box<ASTNode> {
+fn expr_bp(input: &mut Lexer, min_bp: i16) -> Box<ASTNode> {
     let mut lhs = atom(input);
 
     loop {
         println!("Starting next operator");
-        let op = input.peekable().next().unwrap_or(Token::EOF);
-        let op = match op {
+        let op = input.peek();match op {
             Token::EOF => break,
-            Token::PLUS | Token::MINUS | Token::STAR | Token::SLASH => op,
+            Token::PLUS | Token::MINUS | Token::STAR | Token::SLASH => (),
             _ => panic!(format!("Error: invalid operator in expr_bp: {:?}", op)),
         };
         
@@ -49,6 +27,7 @@ fn expr_bp(input: &mut Lexer<Token>, min_bp: i16) -> Box<ASTNode> {
             break;
         }
         //println!("next!(input): {:?}", next!(input));
+        input.next();
         let rhs = expr_bp(input, r_bp);
 
         lhs = Box::from(ASTNode::INFIX_OP_NODE {lhs: lhs, op: op, rhs: rhs});
@@ -69,13 +48,13 @@ return
 
 */
 
-fn atom(input: &mut Lexer<Token>) -> Box<ASTNode> {
+fn atom(input: &mut Lexer) -> Box<ASTNode> {
     /*IDENT,
     INT,
     FLOAT,
     STRING,
     CHAR,*/
-    let t = next!(input);
+    let t = input.next();
     let t = match t {
         Token::IDENT | Token::INT | Token::FLOAT | Token::STRING | Token::CHAR => t,
         _ => panic!("Error: bad token in atom!"),
