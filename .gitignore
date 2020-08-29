@@ -18,3 +18,9 @@ Compiler/rwc.sln
 *.exe
 *.out
 test_1M_lines.rw
+
+Compiler/srcpp/main.dSYM/
+
+.vscode/
+
+Compiler/test_*M_lines.rw

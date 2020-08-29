@@ -1,5 +1,5 @@
-#ifndef LEXER_H_GUARD
-#define LEXER_H_GUARD
+#ifndef LEXER_OLD_H_GUARD
+#define LEXER_OLD_H_GUARD
 
 #include <vector>
 #include <string>
@@ -8,7 +8,7 @@
 #include "Error.h"
 #include "Token.h"
 
-struct Lexer {
+struct Lexer_Old {
     std::vector<Token>* tokens;
     std::vector<Error> errors;
     u32 line_number;
@@ -20,10 +20,10 @@ struct Lexer {
     void make_tokens(const std::string& input_string);
     void make_token(const std::string& token);
 
-    ~Lexer() {
+    ~Lexer_Old() {
         if (tokens)
             delete tokens;
     }
 };
 
-#endif /* LEXER_H_GUARD */
+#endif /* LEXER_OLD_H_GUARD */

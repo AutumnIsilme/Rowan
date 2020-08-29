@@ -34,7 +34,7 @@ soa
 ### Identifiers
 
 Identifiers must fit the following regex: `[a-zA-Z_][a-zA-Z0-9_]*`
-That is to say, identifiers can start with a letter of underscore, and can continue with any number of letters, underscores and numbers.
+That is to say, identifiers can start with a letter or underscore, and can continue with any number of letters, underscores and numbers.
 This regex will include `_`, but this will be treated separately as meaning whatever is happening to the variable will go nowhere.
 
 ### Comments

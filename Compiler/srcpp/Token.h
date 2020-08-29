@@ -1,11 +1,24 @@
 #ifndef TOKEN_H_GUARD
 #define TOKEN_H_GUARD
 
-#include <malloc/_malloc.h>
+#include <string>
 
 #include "Types.h"
 
-typedef enum TokenType {
+enum TokenType : u16;
+
+struct Token {
+    TokenType type;
+    u32 line_number;
+    u32 column_number;
+    const char* token;
+    u32 length;
+
+    Token(TokenType type, u32 line_number, u32 column_number, const char* token, u32 length)
+        : type(type), line_number(line_number), column_number(column_number), token(token), length(length) {}
+};
+
+enum TokenType : u16 {
     /* Keywords */
     TT_IF = 0,
     TT_FOR,
@@ -88,21 +101,7 @@ typedef enum TokenType {
     TT_CHAR,
 
     TT_EOF
-} TokenType;
-
-typedef struct Token {
-    TokenType type;
-    u32 line_number;
-    u32 column_number;
-    const char* token;
-    u64 length;
-} Token;
-
-Token *token_create(TokenType type, u32 line_number, u32 column_number, const char *token, u64 length);
-
-/*
-Token(TokenType type, u32 line_number, u32 column_number, const char* token, u32 length)
-   : type(type), line_number(line_number), column_number(column_number), token(token), length(length) {}*/
+};
 
 static const char* token_type_names[59] = {
     "TT_IF",

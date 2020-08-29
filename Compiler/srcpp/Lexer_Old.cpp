@@ -1,6 +1,6 @@
-#include "Lexer.h"
+#include "Lexer_Old.h"
 #include "KeywordList.h"
-
+/*
 TokenType get_token_type(const std::string& token) {
     return (TokenType)0;
 }
@@ -9,7 +9,7 @@ u32 get_symbol_table_entry(const std::string& token, TokenType type) {
     return 0;
 }
 
-void Lexer::make_token(const std::string& token) {
+void Lexer_Old::make_token(const std::string& token) {
     if (token.length() == 0 || comment_depth != 0) {
         return;
     }
@@ -64,7 +64,7 @@ void Lexer::make_token(const std::string& token) {
         tokens->push_back(Token(type, line_number, column_number, token));
 }
 
-void Lexer::make_tokens(const std::string& input_string) {
+void Lexer_Old::make_tokens(const std::string& input_string) {
     if (tokens)
         delete tokens;
     tokens = new std::vector<Token>();
@@ -75,7 +75,7 @@ void Lexer::make_tokens(const std::string& input_string) {
     std::string intermediate;
     intermediate.reserve(127);
     //std::vector<char> splitChars = { ' ', '\n', '\t', '\f', '(', ')', '[', ']', '+', '-', '/', '*', '!', '=', '%', '^', '&', '|', '<', '>', ',', '"', '\'', '.', ':' };
-    //std::vector<std::string> splitDuoStrings = { "/*", "*/", "//", "**", "&&", "==", "!=", "<=", ">=", "<<", ">>", "<-", "->", "||", "++", "--", "+=", "-=" };
+    //std::vector<std::string> splitDuoStrings = { "/*", "*", "//", "**", "&&", "==", "!=", "<=", ">=", "<<", ">>", "<-", "->", "||", "++", "--", "+=", "-=" };
 
     int i = 0;
     for (; i < input_string.length();) {
@@ -440,3 +440,4 @@ void Lexer::make_tokens(const std::string& input_string) {
     make_token(intermediate);
     tokens = token_backup;
 }
+*/

@@ -1,4 +1,4 @@
-./build.sh
+./build.sh -r
 if [ $? -eq 0 ]; then
     echo
     echo ------------ Finished build ------------
