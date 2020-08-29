@@ -27,6 +27,12 @@ TokenType check_keyword(Scanner *scanner, int start, int length, const char* res
     return TT_IDENT;
 }
 
+#ifdef FASTBUILD
+#define INC_COLUMN(scanner, n)
+#else
+#define INC_COLUMN(scanner, n) scanner->column_number += n
+#endif
+
 Token scanner_next(Scanner *scanner) {
     while (true) {
         switch (*scanner->current) {
@@ -35,17 +41,17 @@ Token scanner_next(Scanner *scanner) {
         case '\n': case '\r': {
             scanner->current++;
             scanner->line_number++;
-            scanner->column_number = 0;
+            INC_COLUMN(scanner, -scanner->column_number);
             break;
         }
         case ' ': case '\f': {
             scanner->current++;
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             break;
         }
         case '\t': {
             scanner->current++;
-            scanner->column_number += 4 - (scanner->column_number % 4);
+            INC_COLUMN(scanner, 4 - (scanner->column_number % 4));
             break;
         }
         case '/': {
@@ -56,7 +62,7 @@ Token scanner_next(Scanner *scanner) {
                 line_comment = true;
             case '*': {
                 scanner->current += 2;
-                scanner->column_number += 2;
+                INC_COLUMN(scanner, 2);
                 u32 comment_depth = 1;
                 while (comment_depth != 0) {
                     switch (*scanner->current) {
@@ -70,17 +76,17 @@ Token scanner_next(Scanner *scanner) {
                             }
                             scanner->current++;
                             scanner->line_number++;
-                            scanner->column_number = 0;
+                            INC_COLUMN(scanner, -scanner->column_number);
                             break;
                         }
                         case '*': {
                             if (*(scanner->current+1) == '/') {
                                 comment_depth--;
                                 scanner->current += 2;
-                                scanner->column_number += 2;
+                                INC_COLUMN(scanner,2);
                             } else {
                                 scanner->current++;
-                                scanner->column_number++;
+                                INC_COLUMN(scanner,1);
                             }
                             break;
                         }
@@ -88,28 +94,28 @@ Token scanner_next(Scanner *scanner) {
                             if (*(scanner->current+1) == '*') {
                                 comment_depth++;
                                 scanner->current += 2;
-                                scanner->column_number += 2;
+                                INC_COLUMN(scanner,2);
                             } else if (*(scanner->current+1) == '/') {
                                 comment_depth++;
                                 line_comment = true;
                                 scanner->current += 2;
-                                scanner->column_number += 2;
+                                INC_COLUMN(scanner,2);
                             } else {
                                 scanner->current++;
-                                scanner->column_number++;
+                                INC_COLUMN(scanner,1);
                             }
                             break;
                         }
                         default: {
                             scanner->current++;
-                            scanner->column_number++;
+                            INC_COLUMN(scanner,1);
                         }
                     }
                 }
                 break;
             }
             default: {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 scanner->start = scanner->current;
                 scanner->current++;
                 return (Token){TT_SLASH, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
@@ -128,37 +134,37 @@ Token scanner_next(Scanner *scanner) {
             return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
         }
         case '(': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_LPAREN, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case ')': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_RPAREN, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case '[': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_LSQUARE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case ']': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_RSQUARE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case '{': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_LCURLY, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case '}': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_RCURLY, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
@@ -166,15 +172,15 @@ Token scanner_next(Scanner *scanner) {
         case '+': {
             scanner->current++;
             if (*scanner->current == '+') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_PLUS_PLUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } /*else if (*scanner->current == '=') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_PLUS_EQUALS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } */else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 scanner->current++;
                 return (Token){TT_PLUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
@@ -183,19 +189,19 @@ Token scanner_next(Scanner *scanner) {
         case '-': {
             scanner->current++;
             if (*scanner->current == '-') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_MINUS_MINUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } /*else if (*scanner->current == '=') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_MINUS_EQUALS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } */else if (*scanner->current == '>') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_MINUS_GT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 scanner->current++;
                 return (Token){TT_MINUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
@@ -204,11 +210,11 @@ Token scanner_next(Scanner *scanner) {
         case '*': {
             scanner->current++;
             if (*scanner->current == '*') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_STAR_STAR, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_STAR, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
@@ -216,11 +222,11 @@ Token scanner_next(Scanner *scanner) {
         case '!': {
             scanner->current++;
             if (*scanner->current == '=') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_EXCL_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_EXCL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
@@ -228,23 +234,23 @@ Token scanner_next(Scanner *scanner) {
         case '=': {
             scanner->current++;
             if (*scanner->current == '=') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_EQUAL_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
         }
         case '%': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_PERCENT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case '^': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_CARET, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
@@ -252,11 +258,11 @@ Token scanner_next(Scanner *scanner) {
         case '&': {
             scanner->current++;
             if (*scanner->current == '&') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_AMPERSAND_AMPERSAND, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_AMPERSAND, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
@@ -264,11 +270,11 @@ Token scanner_next(Scanner *scanner) {
         case '|': {
             scanner->current++;
             if (*scanner->current == '|') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_PIPE_PIPE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_PIPE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
@@ -276,15 +282,15 @@ Token scanner_next(Scanner *scanner) {
         case '<': {
             scanner->current++;
             if (*scanner->current == '=') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_LT_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else if (*scanner->current == '<') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_LT_LT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_LT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
@@ -292,60 +298,60 @@ Token scanner_next(Scanner *scanner) {
         case '>': {
             scanner->current++;
             if (*scanner->current == '=') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_GT_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else if (*scanner->current == '>') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_GT_GT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_GT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
         }
         case ',': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_COMMA, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case '"': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             while (*scanner->current != '"') {
                 if (*scanner->current == '\0') { // @ERROR: EOF in string literal
                     return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
                 }
                 if (*scanner->current == '\\' && *(scanner->current+1) == '"') {
-                    scanner->column_number++;
+                    INC_COLUMN(scanner,1);
                     scanner->current++;
                 }
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 scanner->current++;
             }
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_STRING, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case '\'': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             if (*scanner->current == '\\') {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 scanner->current++;
             } else if (*scanner->current == '\0') { // @ERROR: EOF in character literal
                 return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
             }
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_CHAR, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         case '.': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_DOT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
@@ -353,31 +359,31 @@ Token scanner_next(Scanner *scanner) {
         case ':': {
             scanner->current++;
             if (*scanner->current == '=') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_COLON_EQUALS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else if (*scanner->current == ':') {
-                scanner->column_number += 2;
+                INC_COLUMN(scanner,2);
                 scanner->current++;
                 return (Token){TT_COLON_COLON, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 return (Token){TT_COLON, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             }
             break;
         }
         case ';': {
-            scanner->column_number++;
+            INC_COLUMN(scanner,1);
             scanner->current++;
             return (Token){TT_SEMICOLON, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             break;
         }
         default: { // Identifier or number or keyword
             if (is_alpha(*scanner->current)) {
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 scanner->current++;
                 while (is_alpha(*scanner->current) || is_digit(*scanner->current)) {
-                    scanner->column_number++;
+                    INC_COLUMN(scanner,1);
                     scanner->current++;
                 }
                 TokenType ident_type = TT_IDENT;
@@ -434,18 +440,18 @@ Token scanner_next(Scanner *scanner) {
                 return (Token){ident_type, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
             } else if (is_digit(*scanner->current)) {
                 bool floating_point = false;
-                scanner->column_number++;
+                INC_COLUMN(scanner,1);
                 scanner->current++;
                 while (is_digit(*scanner->current)) {
-                    scanner->column_number++;
+                    INC_COLUMN(scanner,1);
                     scanner->current++;
                 }
                 if (*scanner->current == '.' && is_digit(*(scanner->current + 1))) {
-                    scanner->column_number += 2;
+                    INC_COLUMN(scanner,2);
                     scanner->current += 2;
                     floating_point = true;
                     while (is_digit(*scanner->current)) {
-                        scanner->column_number++;
+                        INC_COLUMN(scanner,1);
                         scanner->current++;
                     }
                 }

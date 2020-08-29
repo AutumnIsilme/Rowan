@@ -4,26 +4,22 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
 
 #include "Scanner.h"
 #include "Timer.h"
 
 int main(int argc, char **argv) {
+    #ifndef NDEBUG
     printf("Hello, World!\n");
+    #endif
 
-/*
-    auto timer2 = Timer();
-    auto timer = Timer();*/
+    Timer timer2 = timer_create();
+    Timer timer = timer_create();
 
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    //struct timespec time;
-    //timespec_get(&time, TIME_UTC);
-    //clock_gettime(_CLOCK_REALTIME, &time);
-    
 
-    FILE* file = fopen("test_4M_lines.rw", "rb");
+    FILE* file = fopen("test_2_4M_lines.rw", "rb");
 
     fseek(file, 0L, SEEK_END);
     size_t fileSize = ftell(file);
@@ -38,34 +34,13 @@ int main(int argc, char **argv) {
     struct timeval tv2;
     gettimeofday(&tv2, NULL);
 
-/*    std::string contents;
+    printf("Read file: %f\n", timer_elapsed(&timer));
+    timer_reset(&timer);
 
-    {
-    std::ifstream in("test.rw", std::ios::in | std::ios::binary);
-    if (in)
-    {
-        in.seekg(0, std::ios::end);
-        contents.resize(in.tellg());
-        in.seekg(0, std::ios::beg);
-        in.read(&contents[0], contents.size());
-        in.close();
-    }
-    else
-    {
-        printf("Could not open source file: %s", "test.rw"); //Temporary hardcoded file.
-        system("PAUSE");
-        //exit(2);
-    }
-    }*/
-
-/*
-    printf("Read file: %f\n", timer.elapsed());
-    timer.reset();
-*/
     Scanner *scanner = scanner_init(file_contents);
 
-  /*  printf("Init: %f\n", timer.elapsed());
-    timer.reset();*/
+    printf("Init: %f\n", timer_elapsed(&timer));
+    timer_reset(&timer);
 
     //printf("%zu\n", Lexer_Old.tokens->size());
     //Token *first = token_create(TT_AMPERSAND, 0, 0, 0, 0);
@@ -81,15 +56,8 @@ int main(int argc, char **argv) {
         //printf("[%s: %s]\n", token_type_names[(u16)t->type], contents);
     }
 
-    struct timeval tv3;
-    gettimeofday(&tv3, NULL);
-
-    unsigned long long delta1 = tv2.tv_usec + tv2.tv_sec * 1000000 - tv.tv_usec - tv.tv_sec * 1000000;
-    unsigned long long delta2 = tv3.tv_usec + tv3.tv_sec * 1000000 - tv2.tv_usec - tv2.tv_sec * 1000000;
-    printf("Read file: %f\nTokenise: %f\n", (double)delta1 / 1000000.0, (double)delta2 / 1000000.0);
-
-    //printf("Output tokens: %f\n", timer.elapsed());
-    //printf("Total: %f\n", timer2.elapsed());
+    printf("Output tokens: %f\n", timer_elapsed(&timer));
+    printf("Total: %f\n", timer_elapsed(&timer2));
     return 0;
 }
 

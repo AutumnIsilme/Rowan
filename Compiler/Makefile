@@ -5,7 +5,7 @@ CXXFLAGS := -std=c++1z
 CFLAGS := -std=c11
 LDFLAGS := 
 
-OBJS := src/main.o src/Scanner.o src/Token.o
+OBJS := src/main.o src/Scanner.o src/Token.o src/Timer.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -21,7 +21,7 @@ build: $(OBJS)
 	mkdir -p build
 	$(CC) $(LDFLAGS) $(OBJS) -o build/rwc.out
 
-release: CFLAGS += -O3
+release: CFLAGS += -O3 -D FASTBUILD
 release: CXXFLAGS += -O3
 release: $(OBJS)
 release: build
