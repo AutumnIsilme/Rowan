@@ -1,4 +1,4 @@
-typedef unsigned int u32
+typedef unsigned int u32;
 /* Function definitions */
 
 int foo(const char *str, unsigned int length) {
@@ -12,6 +12,10 @@ foo :: int (const char *string, u32 length) {
 int (const char *string, u32 length) foo {
 
 }
+
+int (const char *string, u32 length) {
+
+} foo
 
 foo : int (const char *string, u32 length) {
 
@@ -53,6 +57,39 @@ foo(const char *string, u32 length) -> int {
     
 }
 
+foo(const char *string, u32 length) -> (int) {
+    
+}
+
+foo(const char *string, u32 length)>(int) {
+    
+}
+
+foo(const char *string, u32 length)(int) {
+    
+}
+
+foo (int):(const char *string, u32 length) {
+
+}
+
+foo (int) = (const char *string, u32 length) {
+
+}
+
+foo (int retval) = (const char *string, u32 length) {
+    retval = length - string[0]
+    return
+}
+
+foo int = const char *string, u32 length {
+
+}
+
+foo: int = (const char *string, u32 length) {
+    
+}
+
 fn foo(const char *string, u32 length):(int) {
 
 }
@@ -84,6 +121,9 @@ def foo(string: const char *, length: u32) -> int {
 def foo(const char *string, u32 length) -> int:
     //Significant whitespace
 
+fn foo(const char *string, u32 length) do
+
+end
 
 /*-----------------------------------------------*/
 
@@ -181,6 +221,14 @@ for i in 0..128 loop
 
 end loop
 
+for i := 0..10 {
+
+}
+
+for 0..10 {
+    int num = 2 * it;
+}
+
 /*-----------------------------------------------*/
 
 /* While loops */
@@ -210,6 +258,10 @@ do {
 while true do {
 
 }
+
+while true do
+
+end
 
 /*-----------------------------------------------*/
 
@@ -320,3 +372,12 @@ Grid_Mode: enum u32 {
     MODE_4 : 3
 }
 
+/*-----------------------------------------------*/
+
+/* pointers */
+
+int *a = &b;
+
+int^ a = &b;
+
+int^ a = ^b; int c = $a;

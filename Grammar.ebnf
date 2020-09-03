@@ -1,0 +1,26 @@
+block = '{', statement*, '}';
+
+statement = function | struct | return | using | expr;
+
+expr = binary_expr | if | for | while | switch_case | assign | block;
+
+binary_expr = unary_expr, (binary_op, binary_expr)?;
+unary_expr = unary_op?, atom;
+atom = literal | identifier | '(', expr, ')';
+literal = number | string | list | range;
+
+range = int, '..', int;
+number = int | float;
+string = '"', characters*, '"';
+identifier = ([a-zA-Z_], [a-zA-Z0-9_]+) | [a-zA-Z];
+
+assign = identifier (':=' | '::' | '=') expr;
+if = 'if' binary_expr expr;
+for = 'for', (range | identifier, ':', expr), expr;
+while = 'while', binary_expr, expr;
+switch_case = 'switch', expr, '{', case* '}';
+case = 'case', literal, ':', expr;
+
+(* The identifier must either be a variable with a struct type,
+   or an enum type, or mabye other things later. *)
+using = 'using', identifier;
