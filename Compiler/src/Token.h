@@ -5,7 +5,7 @@
 
 #include "Types.h"
 
-typedef enum TokenType {
+typedef enum _TokenType {
     /* Keywords */
     TT_IF = 0,
     TT_FOR,

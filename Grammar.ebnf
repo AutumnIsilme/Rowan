@@ -22,5 +22,11 @@ switch_case = 'switch', expr, '{', case* '}';
 case = 'case', literal, ':', expr;
 
 (* The identifier must either be a variable with a struct type,
-   or an enum type, or mabye other things later. *)
-using = 'using', identifier;
+   or an enum type, or a filename string to use another file.
+   Filenames will be evaluated relative to the directory of the
+   file the 'using' is in, or additional include directories
+   specified by a flag when the compiler is executed. *)
+using = 'using', (identifier | string);
+(* Including files will paste the text of the filename provided
+   into the file with the include. Paths work as with usings. *)
+include = 'using', string;

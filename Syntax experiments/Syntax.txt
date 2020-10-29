@@ -125,6 +125,18 @@ fn foo(const char *string, u32 length) do
 
 end
 
+foo (string: const char *, length: u32) -> int {
+
+}
+
+(string: const char *, length: u32) -> (int) foo {
+
+}
+
+(int) = (string: const char *, length: u32) foo {
+    
+}
+
 /*-----------------------------------------------*/
 
 /* Function calls */
@@ -174,6 +186,8 @@ i =: 0
 i = int()
 
 var i = int()
+
+i int = 0;
 
 /*-----------------------------------------------*/
 
@@ -317,13 +331,13 @@ switch state_val {
 }
 
 //Too sentence-like, probably relatively difficult to parse.
-switching on state_val, in the case of 0 do print "Hello, World. The value was 0!" then break, while in the default case do nothing.
+Checking state_val, in the case of 0 do print "Hello, World. The value was 0!" then break, while in the case of 1 do print "This is section 2" then break, while in the default case do nothing.
 
 /*-----------------------------------------------*/
 
 /* Structs */
 
-typedef struct Vector3f {
+typedef struct _Vector3f {
     double x;
     double y;
     double z;
@@ -353,6 +367,14 @@ type :: Vector3f
     double: x, y, z
 end type
 
+Vector3f : {
+    double x, y, z;
+}
+
+Vector3f {
+    double x, y, z;
+}
+
 /*-----------------------------------------------*/
 
 /* enum */
@@ -381,3 +403,21 @@ int *a = &b;
 int^ a = &b;
 
 int^ a = ^b; int c = $a;
+
+int< a = >b; int c = <a; <a = c; // ?
+
+a := >b; c := <a; a> = c; a = >c;
+
+int *a = &b; int c = *a; *a = c; a = &c;
+
+a : ^int = ^b; c := 
+
+a := b<; c := a>; a> = c;
+
+int^ a = ^b; int c = @a; @a = c; a = ^c;
+
+=<= =>= === =/= _>_ _<_
+
+/*-----------------------------------------------*/
+if a 
+    b> = c;

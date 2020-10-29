@@ -2,12 +2,13 @@
 
 #include <string.h>
 
-Scanner* scanner_init(const char* src) {
+Scanner* scanner_init(const char* src, size_t src_size) {
     Scanner* scanner = malloc(sizeof(*scanner));
     scanner->column_number = 0;
     scanner->line_number = 1;
     scanner->start = src;
     scanner->current = src;
+    scanner->end = src + src_size;
     return scanner;
 }
 
@@ -22,7 +23,7 @@ bool is_digit(char c) {
 TokenType check_keyword(Scanner *scanner, int start, int length, const char* rest, TokenType type) {
     if ((scanner->current - scanner->start) == start + length 
         && memcmp(scanner->start + start, rest, length) == 0) {
-        return type;
+        return type; 
     }
     return TT_IDENT;
 }
@@ -35,9 +36,10 @@ TokenType check_keyword(Scanner *scanner, int start, int length, const char* res
 
 Token scanner_next(Scanner *scanner) {
     while (true) {
-        switch (*scanner->current) {
-        case '\0':
+        if (scanner->current == scanner->end) {
             return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
+        }
+        switch (*scanner->current) {
         case '\n': case '\r': {
             scanner->current++;
             scanner->line_number++;
@@ -65,10 +67,10 @@ Token scanner_next(Scanner *scanner) {
                 INC_COLUMN(scanner, 2);
                 u32 comment_depth = 1;
                 while (comment_depth != 0) {
+                    if (scanner->current == scanner->end) {
+                        return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
+                    }
                     switch (*scanner->current) {
-                        case '\0': { // @ERROR: EOF in comment
-                            return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
-                        }
                         case '\n': {
                             if (line_comment) {
                                 line_comment = false;
@@ -130,9 +132,6 @@ Token scanner_next(Scanner *scanner) {
     whitespace_end:
     scanner->start = scanner->current;
     switch (*scanner->current) {
-        case '\0': {
-            return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
-        }
         case '(': {
             INC_COLUMN(scanner,1);
             scanner->current++;
@@ -321,7 +320,7 @@ Token scanner_next(Scanner *scanner) {
             INC_COLUMN(scanner,1);
             scanner->current++;
             while (*scanner->current != '"') {
-                if (*scanner->current == '\0') { // @ERROR: EOF in string literal
+                if (scanner->current == scanner->end) { // @ERROR: EOF in string literal
                     return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
                 }
                 if (*scanner->current == '\\' && *(scanner->current+1) == '"') {
@@ -342,7 +341,7 @@ Token scanner_next(Scanner *scanner) {
             if (*scanner->current == '\\') {
                 INC_COLUMN(scanner,1);
                 scanner->current++;
-            } else if (*scanner->current == '\0') { // @ERROR: EOF in character literal
+            } else if (scanner->current == scanner->end) { // @ERROR: EOF in character literal
                 return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
             }
             INC_COLUMN(scanner,1);
