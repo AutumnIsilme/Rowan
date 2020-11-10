@@ -87,6 +87,7 @@ typedef enum _TokenType {
     TT_STRING,
     TT_CHAR,
 
+    TT_NEWLINE,
     TT_EOF
 } TokenType;
 
@@ -104,7 +105,7 @@ Token *token_create(TokenType type, u32 line_number, u32 column_number, const ch
 Token(TokenType type, u32 line_number, u32 column_number, const char* token, u32 length)
    : type(type), line_number(line_number), column_number(column_number), token(token), length(length) {}*/
 
-static const char* token_type_names[59] = {
+static const char* token_type_names[60] = {
     "TT_IF",
     "TT_FOR",
     "TT_WHILE",
@@ -166,6 +167,7 @@ static const char* token_type_names[59] = {
     "TT_STRING",
     "TT_CHAR",
 
+    "TT_NEWLINE",
     "TT_EOF"
 };
 

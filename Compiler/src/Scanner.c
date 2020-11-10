@@ -1,6 +1,7 @@
 #include "Scanner.h"
 
 #include <string.h>
+#include <stdint.h>
 
 Scanner* scanner_init(const char* src, size_t src_size) {
     Scanner* scanner = malloc(sizeof(*scanner));
@@ -35,15 +36,26 @@ TokenType check_keyword(Scanner *scanner, int start, int length, const char* res
 #endif
 
 Token scanner_next(Scanner *scanner) {
+    static uint64_t token_index = 0;
+    token_index++;
     while (true) {
         if (scanner->current == scanner->end) {
             return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
         }
         switch (*scanner->current) {
         case '\n': case '\r': {
+            static uint64_t prev = 0;
+            if (prev + 1 != token_index) {
+                scanner->current++;
+                scanner->line_number++;
+                INC_COLUMN(scanner, -scanner->column_number);
+                prev = token_index;
+                return (Token){TT_NEWLINE, scanner->line_number, scanner->column_number, scanner->current - 1, 1};
+            }
             scanner->current++;
             scanner->line_number++;
             INC_COLUMN(scanner, -scanner->column_number);
+            prev = token_index;
             break;
         }
         case ' ': case '\f': {
