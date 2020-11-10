@@ -44,10 +44,8 @@ Block comments can be nested. Comments can be started and ended the same way as 
 /*
 This is a block comment
 /* This is a nested block comment */
-// */ This is still in a comment! Even if it doesn't look like it. The line comment at the start of this line makes it so.
-
-// /*
-Also still in a comment here! */
+This is still in a comment! 
+*/ 
 ```
 
 ### Operators and types

@@ -60,8 +60,24 @@ Token scanner_next(Scanner *scanner) {
             bool line_comment = false;
             switch (*(scanner->current + 1))
             {
-            case '/':
+            case '/': {
                 line_comment = true;
+                while (line_comment) {
+                    if (scanner->current == scanner->end) {
+                        return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
+                    }
+                    if (*(scanner->current+1) == '\n') {
+                        line_comment = false;
+                        scanner->current++;
+                        scanner->line_number++;
+                        INC_COLUMN(scanner, -scanner->column_number);
+                    } else {
+                        scanner->current++;
+                        INC_COLUMN(scanner,1);
+                    }
+                }
+                break;
+            }
             case '*': {
                 scanner->current += 2;
                 INC_COLUMN(scanner, 2);
@@ -72,10 +88,6 @@ Token scanner_next(Scanner *scanner) {
                     }
                     switch (*scanner->current) {
                         case '\n': {
-                            if (line_comment) {
-                                line_comment = false;
-                                comment_depth--;
-                            }
                             scanner->current++;
                             scanner->line_number++;
                             INC_COLUMN(scanner, -scanner->column_number);
@@ -95,11 +107,6 @@ Token scanner_next(Scanner *scanner) {
                         case '/': {
                             if (*(scanner->current+1) == '*') {
                                 comment_depth++;
-                                scanner->current += 2;
-                                INC_COLUMN(scanner,2);
-                            } else if (*(scanner->current+1) == '/') {
-                                comment_depth++;
-                                line_comment = true;
                                 scanner->current += 2;
                                 INC_COLUMN(scanner,2);
                             } else {
