@@ -1,4 +1,4 @@
-#include "Scanner.h"
+#include "Frontend/Scanner.h"
 
 #include <string.h>
 #include <stdint.h>

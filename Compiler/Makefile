@@ -13,7 +13,7 @@ OBJS := src/main.o src/Scanner.o src/Token.o src/Timer.o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: test build clean
+.PHONY: test build clean release debug
 
 all: build
 
@@ -23,12 +23,14 @@ build: $(OBJS)
 
 release: CFLAGS += -O3 -D FASTBUILD
 release: CXXFLAGS += -O3
-release: $(OBJS)
 release: build
+
+debug: build
 
 test: build
 	./build/rwc.out
 
+celan: clean
 clean:
 	rm -rf src/*.o
 	rm -rf src/*.d

@@ -421,3 +421,20 @@ int^ a = ^b; int c = @a; @a = c; a = ^c;
 /*-----------------------------------------------*/
 if a 
     b> = c;
+
+if a:
+    // do stuff
+
+if (a)
+    // do stuff
+
+if (a) {
+
+}
+
+if a {
+
+}
+
+if a | // do stuff
+

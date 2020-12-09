@@ -1,5 +1,5 @@
-#ifndef LEXER_H_GUARD
-#define LEXER_H_GUARD
+#ifndef SCANNER_H_GUARD
+#define SCANNER_H_GUARD
 
 #ifdef __c_plus_plus
 extern "C" {
@@ -28,4 +28,4 @@ TokenType check_keyword(Scanner* scanner, int start, int length, const char* res
 }
 #endif
 
-#endif /* LEXER_H_GUARD */
+#endif /* SCANNER_H_GUARD */
