@@ -1,7 +1,7 @@
 #ifndef TOKEN_H_GUARD
 #define TOKEN_H_GUARD
 
-#include <malloc/_malloc.h>
+#include <memory.h>
 
 #include "Types.h"
 

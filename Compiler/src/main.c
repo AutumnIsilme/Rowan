@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "Scanner.h"
 #include "Timer.h"
@@ -12,10 +13,11 @@ int main(int argc, char **argv) {
     Timer timer2 = timer_create();
     Timer timer = timer_create();
 
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
-    FILE* file = fopen("test.rw", "rb");
+    FILE* file = fopen("test2.rw", "rb");
+    if (file == NULL) {
+        printf("Failed to open file!\n");
+        return -1;
+    }
 
     fseek(file, 0L, SEEK_END);
     size_t file_size = ftell(file);
@@ -25,12 +27,9 @@ int main(int argc, char **argv) {
     size_t bytes_read = fread(file_contents, sizeof(char), file_size, file);
     file_contents[bytes_read] = '\0';
 
-    printf("Bytes read: %#x\n", bytes_read);
+    printf("Bytes read: %#lx\n", bytes_read);
 
     fclose(file);
-
-    struct timeval tv2;
-    gettimeofday(&tv2, NULL);
 
     printf("Read file: %f\n", timer_elapsed(&timer));
     timer_reset(&timer);
