@@ -1,10 +1,3 @@
-//
-//  main.c
-//  Bytecode VM
-//
-//  Created by Sebastian Wilkinson on 11/02/2020.
-//  Copyright © 2020 Supernova Developments. All rights reserved.
-//
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
