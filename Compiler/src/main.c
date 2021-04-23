@@ -16,7 +16,21 @@ int main(int argc, char **argv) {
     }
 
     Timer timer2 = timer_create();
+<<<<<<< HEAD
     //Timer timer = timer_create();
+=======
+    Timer timer = timer_create();
+
+    FILE* file = fopen("test2.rw", "rb");
+    if (file == NULL) {
+        printf("Failed to open file!\n");
+        return -1;
+    }
+
+    fseek(file, 0L, SEEK_END);
+    size_t file_size = ftell(file);
+    rewind(file);
+>>>>>>> 8d45f37492ab6ec1484f45df33e93d574214eef7
 
     /*FILE* file = fopen("test2.rw", "rb");
     if (file == NULL) {
@@ -24,11 +38,22 @@ int main(int argc, char **argv) {
         return -1;
     }*/
 
+<<<<<<< HEAD
     /*struct timeval tv2;
     gettimeofday(&tv2, NULL);
 
     printf("Read file: %f\n", timer_elapsed(&timer));*/
     //timer_reset(&timer);
+=======
+    printf("Bytes read: %#lx\n", bytes_read);
+
+    fclose(file);
+
+    printf("Read file: %f\n", timer_elapsed(&timer));
+    timer_reset(&timer);
+
+    Scanner *scanner = scanner_init(file_contents, file_size);
+>>>>>>> 8d45f37492ab6ec1484f45df33e93d574214eef7
 
     //printf("Init: %f\n", timer_elapsed(&timer));
     //timer_reset(&timer);

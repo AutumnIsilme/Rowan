@@ -1,7 +1,11 @@
 #ifndef TOKEN_H_GUARD
 #define TOKEN_H_GUARD
 
+<<<<<<< HEAD
 #include <Frontend/Common.h>
+=======
+#include <memory.h>
+>>>>>>> 8d45f37492ab6ec1484f45df33e93d574214eef7
 
 typedef enum __attribute__((__packed__)) _TokenType {
     /* Keywords */
