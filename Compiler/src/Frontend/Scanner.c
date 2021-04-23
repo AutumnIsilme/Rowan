@@ -1,483 +1,329 @@
-#include "Frontend/Scanner.h"
+#include <Frontend/Scanner.h>
+#include <Frontend/StateMachine.h>
+#include <Frontend/KeywordList.h>
+#include <Error.h>
 
+#include <stdio.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
-Scanner* scanner_init(const char* src, size_t src_size) {
-    Scanner* scanner = malloc(sizeof(*scanner));
-    scanner->column_number = 0;
-    scanner->line_number = 1;
-    scanner->start = src;
-    scanner->current = src;
-    scanner->end = src + src_size;
-    return scanner;
+void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uint64 *token_array_capacity) {
+    *token_array_capacity_bytes += *token_array_capacity_bytes;
+    *tokens = realloc(*tokens, *token_array_capacity_bytes);
+    if (*tokens == NULL) exit(1);
+    *token_array_capacity += *token_array_capacity;
 }
 
-bool is_alpha(char c) {
-    return (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || c == '_');
-}
-
-bool is_digit(char c) {
-    return ('0' <= c && c <= '9');
-}
-
-TokenType check_keyword(Scanner *scanner, int start, int length, const char* rest, TokenType type) {
-    if ((scanner->current - scanner->start) == start + length 
-        && memcmp(scanner->start + start, rest, length) == 0) {
-        return type; 
+Token *scan(const char *filename, uint64 *token_count_out) {
+    uint64 token_array_capacity_bytes = 4096;
+    uint64 token_array_capacity = 128;
+    uint64 token_array_length = 0;
+    Token *tokens = malloc(token_array_capacity_bytes);
+    if (tokens == NULL) {
+        exit(1);
     }
-    return TT_IDENT;
-}
+    Token *next_token = tokens;
 
-#ifdef FASTBUILD
-#define INC_COLUMN(scanner, n)
-#else
-#define INC_COLUMN(scanner, n) scanner->column_number += n
-#endif
+    int file = open(filename, O_RDONLY);
+    struct stat s;
+    int status = fstat(file, &s);
+    if (status == -1) {
+        exit(1); // show errno
+    }
+    size_t file_size = s.st_size;
 
-Token scanner_next(Scanner *scanner) {
-    static uint64_t token_index = 0;
-    token_index++;
-    while (true) {
-        if (scanner->current == scanner->end) {
-            return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
-        }
-        switch (*scanner->current) {
-        case '\n': case '\r': {
-            static uint64_t prev = 0;
-            if (prev + 1 != token_index) {
-                scanner->current++;
-                scanner->line_number++;
-                INC_COLUMN(scanner, -scanner->column_number);
-                prev = token_index;
-                return (Token){TT_NEWLINE, scanner->line_number, scanner->column_number, scanner->current - 1, 1};
-            }
-            scanner->current++;
-            scanner->line_number++;
-            INC_COLUMN(scanner, -scanner->column_number);
-            prev = token_index;
-            break;
-        }
-        case ' ': case '\f': {
-            scanner->current++;
-            INC_COLUMN(scanner,1);
-            break;
-        }
-        case '\t': {
-            scanner->current++;
-            INC_COLUMN(scanner, 4 - (scanner->column_number % 4));
-            break;
-        }
-        case '/': {
-            bool line_comment = false;
-            switch (*(scanner->current + 1))
-            {
-            case '/': {
-                line_comment = true;
-                while (line_comment) {
-                    if (scanner->current == scanner->end) {
-                        return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
+    char *source = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
+    if (source == NULL) {
+        exit(1);
+    }
+    close(file);
+
+    char *current = source;
+    char *end = source + file_size;
+    while (current <= end) {
+        int state = START;
+        uint64 token_len = 0;
+        //printf("Starting token %llu, %.5s\n", token_array_length, current);
+        do {
+            int ch = *current++;
+            int equiv_class = equivalence_class[ch];
+            state = transition[state + equiv_class];
+            token_len += in_token[state];
+        } while (state > LAST_FINAL_STATE);
+
+        //printf("Final state %d\n", state);
+        switch (state) {
+            case S_NEWLINE: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 1 + (*(current - token_len) == '\r');
+                next_token->type = TT_SEMICOLON + (TT_NEWLINE - TT_SEMICOLON) * (*(current - token_len) < ';');
+                current = next_token->token + next_token->length;
+            } break;
+            case S_CHAR: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                while (*current != '\'') {
+                    token_len++;
+                    if (*current == '\\') {
+                        current++;
+                        token_len++;
+                    } else if (*current == 0) {
+                        report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: End Of File in character literal");
+                        return tokens;
                     }
-                    if (*(scanner->current+1) == '\n') {
-                        line_comment = false;
-                        scanner->current++;
-                        scanner->line_number++;
-                        INC_COLUMN(scanner, -scanner->column_number);
+                    current++;
+                }
+                if ((token_len > 3 && next_token->token[1] != '\\') || (next_token->token[1] == '\\' && token_len > 4)) {
+                    report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: More than one character in character literal");
+                }
+                next_token->length = token_len + 1;
+                next_token->type = TT_CHAR;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_STRING: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                while (*current != '"') {
+                    token_len++;
+                    if (*current == '\\') {
+                        current++;
+                        token_len++;
+                    } else if (*current == 0) {
+                        report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: End Of File in string literal");
+                        return tokens;
+                    }
+                    current++;
+                }
+                next_token->length = token_len + 1;
+                next_token->type = TT_CHAR;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_SINGLE_OP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 1;
+                switch (*next_token->token) {
+                    case '.': next_token->type = TT_DOT;        break;
+                    case '~': next_token->type = TT_TILDE;      break;
+                    case '#': next_token->type = TT_HASH;       break;
+                    case ',': next_token->type = TT_COMMA;      break;
+                    case '?': next_token->type = TT_QUESTION;   break;
+                    case '@': next_token->type = TT_AT;         break;
+                    case '(': next_token->type = TT_LPAREN;     break;
+                    case ')': next_token->type = TT_RPAREN;     break;
+                    case '{': next_token->type = TT_LCURLY;     break;
+                    case '}': next_token->type = TT_RCURLY;     break;
+                    case '[': next_token->type = TT_LSQUARE;    break;
+                    case ']': next_token->type = TT_RSQUARE;    break;
+                    case '\\': next_token->type = TT_BACKSLASH; break;
+                    case '+': next_token->type = TT_PLUS;       break;
+                    case '-': next_token->type = TT_MINUS;      break;
+                    case '*': next_token->type = TT_STAR;       break;
+                    case '/': next_token->type = TT_SLASH;      break;
+                    case '<': next_token->type = TT_LESS;       break;
+                    case '>': next_token->type = TT_GREATER;    break;
+                    case '=': next_token->type = TT_EQUAL;      break;
+                    case '&': next_token->type = TT_AMPERSAND;  break;
+                    case '|': next_token->type = TT_PIPE;       break;
+                    case '^': next_token->type = TT_CARET;      break;
+                    case '!': next_token->type = TT_EXCL;       break;
+                    case '%': next_token->type = TT_PERCENT;    break;
+                    case ':': next_token->type = TT_COLON;      break;
+                    default: {
+                        report_error(__FILE__, __LINE__, filename, source, next_token->offset, 2, "Scanner: Encountered unrecognised character for S_SINGLE_OP: %c", *next_token->token);
+                        //printf("%s %s: Error - Encountered unrecognised character for S_SINGLE_OP: %c", __FILE__, __LINE__, *next_token->token);
+                    }
+                }
+                current = next_token->token + next_token->length;
+            } break;
+            case S_DOUBLED_OP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 2;
+                switch (*next_token->token) {
+                    case '+': next_token->type = TT_PLUS_PLUS;           break;
+                    case '-': next_token->type = TT_MINUS_MINUS;         break;
+                    case '<': next_token->type = TT_LESS_LESS;           break;
+                    case '>': next_token->type = TT_GREATER_GREATER;     break;
+                    case '&': next_token->type = TT_AMPERSAND_AMPERSAND; break;
+                    case '|': next_token->type = TT_PIPE_PIPE;           break;
+                    case '=': next_token->type = TT_EQUAL_EQUAL;         break;
+                    default: {
+                        report_error(__FILE__, __LINE__, filename, source, next_token->offset, 2, "Scanner: Encountered unrecognised character for S_DOUBLED_OP: %c", *next_token->token);
+                        //printf("%s %s: Error - Encountered unrecognised character for S_DOUBLED_OP: %c", __FILE__, __LINE__, *next_token->token);
+                    }
+                }
+                current = next_token->token + next_token->length;
+            } break;
+            case S_EQUABLE: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 2;
+                switch (*next_token->token) {
+                    case '+': next_token->type = TT_PLUS_EQUAL;       break;
+                    case '-': next_token->type = TT_MINUS_EQUAL;      break;
+                    case '*': next_token->type = TT_STAR_EQUAL;       break;
+                    case '/': next_token->type = TT_SLASH_EQUAL;      break;
+                    case '<': next_token->type = TT_LESS_EQUAL;       break;
+                    case '>': next_token->type = TT_GREATER_EQUAL;    break;
+                    case '=': next_token->type = TT_EQUAL_EQUAL;      break;
+                    case '&': next_token->type = TT_AMPERSAND_EQUAL;  break;
+                    case '|': next_token->type = TT_PIPE_EQUAL;       break;
+                    case '^': next_token->type = TT_CARET_EQUAL;      break;
+                    case '!': next_token->type = TT_EXCL_EQUAL;       break;
+                    case '%': next_token->type = TT_PERCENT_EQUAL;    break;
+                    case ':': next_token->type = TT_COLON_EQUAL;      break;
+                    default: {
+                        report_error(__FILE__, __LINE__, filename, source, next_token->offset, 2, "Scanner: Encountered unrecognised character for S_EQUABLE: %c", *next_token->token);
+                        //printf("%s %s: Error - Encountered unrecognised character for S_DOUBLED_OP: %c", __FILE__, __LINE__, *next_token->token);
+                    }
+                }
+                current = next_token->token + next_token->length;
+            } break;
+            case S_SAW_LETTER: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                uint64 hash = next_token->token[0];
+                while (1) {
+                    char c = *current++;
+                    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '$') {
+                        hash = ROL(hash, 2) + c;
+                        token_len++;
                     } else {
-                        scanner->current++;
-                        INC_COLUMN(scanner,1);
+                        break;
                     }
                 }
-                break;
-            }
-            case '*': {
-                scanner->current += 2;
-                INC_COLUMN(scanner, 2);
-                u32 comment_depth = 1;
-                while (comment_depth != 0) {
-                    if (scanner->current == scanner->end) {
-                        return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
-                    }
-                    switch (*scanner->current) {
-                        case '\n': {
-                            scanner->current++;
-                            scanner->line_number++;
-                            INC_COLUMN(scanner, -scanner->column_number);
-                            break;
-                        }
-                        case '*': {
-                            if (*(scanner->current+1) == '/') {
-                                comment_depth--;
-                                scanner->current += 2;
-                                INC_COLUMN(scanner,2);
-                            } else {
-                                scanner->current++;
-                                INC_COLUMN(scanner,1);
-                            }
-                            break;
-                        }
-                        case '/': {
-                            if (*(scanner->current+1) == '*') {
-                                comment_depth++;
-                                scanner->current += 2;
-                                INC_COLUMN(scanner,2);
-                            } else {
-                                scanner->current++;
-                                INC_COLUMN(scanner,1);
-                            }
-                            break;
-                        }
-                        default: {
-                            scanner->current++;
-                            INC_COLUMN(scanner,1);
-                        }
+                next_token->length = token_len;
+                uint64 h = KEYWORD_HASHES[hash & ((1 << 7) - 1)];
+                uint8 i = KEYWORD_TYPE[hash & ((1 << 7) - 1)];
+                if (h == hash && KEYWORD_LEN[i] == token_len && memcmp(next_token->token, KEYWORD_LIST[i], token_len) == 0) {
+                    next_token->type = i;
+                } else {
+                    next_token->type = TT_IDENT;
+                }
+                current = next_token->token + next_token->length;
+            } break;
+            case S_SAW_NUMBER: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                bool is_float = false;
+                if (*(current - 1) == '.') is_float = true;
+                while (1) {
+                    char c = *current++;
+                    if (('0' <= c && c <= '9') || c == '_') {
+                        token_len++;
+                    } else if (c == '.') {
+                        is_float = true;
+                        token_len++;
+                    } else {
+                        break;
                     }
                 }
-                break;
-            }
-            default: {
-                INC_COLUMN(scanner,1);
-                scanner->start = scanner->current;
-                scanner->current++;
-                return (Token){TT_SLASH, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-                break;
-            }
-            }
-            break;
+                next_token->length = token_len;
+                next_token->type = is_float ? TT_FLOAT : TT_INT;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_SAW_NUMERIC_LITERAL: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                char base = *(current - 1);
+                switch (base) {
+                    case 'b': {
+                        while (1) {
+                            char c = *current++;
+                            if (('0' <= c && c <= '1') || c == '_') {
+                                token_len++;
+                            } else {
+                                break;
+                            }
+                        }
+                        next_token->type = TT_BINARY_LITERAL;
+                    } break;
+                    case 'o': {
+                        while (1) {
+                            char c = *current++;
+                            if (('0' <= c && c <= '7') || c == '_') {
+                                token_len++;
+                            } else {
+                                break;
+                            }
+                        }
+                        next_token->type = TT_OCTAL_LITERAL;
+                    } break;
+                    case 'x': {
+                        while (1) {
+                            char c = *current++;
+                            if (('a' <= c && c <= 'f') || ('A' <= c && c <= 'F') || ('0' <= c && c <= '9') || c == '_') {
+                                token_len++;
+                            } else {
+                                break;
+                            }
+                        }
+                        next_token->type = TT_HEX_LITERAL;
+                    }
+                    default: {
+                        next_token->type = TT_NONE;
+                    }
+                }
+                next_token->length = token_len;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_LONE_ZERO: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 1;
+                next_token->type = TT_INT;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_ARROW: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 2;
+                next_token->type = TT_INT;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_SINGLE_LINE_COMMENT: {
+                while (*current != '\n') current++;
+                next_token--;
+                token_array_length--;
+            } break;
+            case S_MULTI_LINE_COMMENT: {
+                while (*current != '*' && *(current + 1) != '/') current++;
+                current += 2;
+                next_token--;
+                token_array_length--;
+            } break;
+            case S_SHIFT_EQUAL: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 3;
+                next_token->type = *next_token->token == '<' ? TT_LESS_LESS_EQUAL : TT_GREATER_GREATER_EQUAL;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_ERROR: {
+                report_error(__FILE__, __LINE__, filename, source, current - source, 1, "Scanner: Encountered unexpected character (%d)", *current);
+                return tokens;
+            } break;
+            case S_EOF: {
+
+            } break;
         }
-        default: goto whitespace_end;
+        next_token++;
+        token_array_length++;
+        if (token_array_length == token_array_capacity) {
+            extend_tokens_array(&tokens, &token_array_capacity_bytes, &token_array_capacity);
         }
     }
-    whitespace_end:
-    scanner->start = scanner->current;
-    switch (*scanner->current) {
-        case '(': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_LPAREN, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case ')': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_RPAREN, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '[': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_LSQUARE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case ']': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_RSQUARE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '{': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_LCURLY, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '}': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_RCURLY, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '+': {
-            scanner->current++;
-            if (*scanner->current == '+') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_PLUS_PLUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } /*else if (*scanner->current == '=') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_PLUS_EQUALS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } */else {
-                INC_COLUMN(scanner,1);
-                scanner->current++;
-                return (Token){TT_PLUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '-': {
-            scanner->current++;
-            if (*scanner->current == '-') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_MINUS_MINUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } /*else if (*scanner->current == '=') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_MINUS_EQUALS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } */else if (*scanner->current == '>') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_MINUS_GT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                scanner->current++;
-                return (Token){TT_MINUS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '*': {
-            scanner->current++;
-            if (*scanner->current == '*') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_STAR_STAR, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_STAR, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '!': {
-            scanner->current++;
-            if (*scanner->current == '=') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_EXCL_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_EXCL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '=': {
-            scanner->current++;
-            if (*scanner->current == '=') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_EQUAL_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '%': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_PERCENT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '^': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_CARET, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '&': {
-            scanner->current++;
-            if (*scanner->current == '&') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_AMPERSAND_AMPERSAND, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_AMPERSAND, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '|': {
-            scanner->current++;
-            if (*scanner->current == '|') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_PIPE_PIPE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_PIPE, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '<': {
-            scanner->current++;
-            if (*scanner->current == '=') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_LT_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else if (*scanner->current == '<') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_LT_LT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_LT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case '>': {
-            scanner->current++;
-            if (*scanner->current == '=') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_GT_EQUAL, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else if (*scanner->current == '>') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_GT_GT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_GT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case ',': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_COMMA, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '"': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            while (*scanner->current != '"') {
-                if (scanner->current == scanner->end) { // @ERROR: EOF in string literal
-                    return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
-                }
-                if (*scanner->current == '\\' && *(scanner->current+1) == '"') {
-                    INC_COLUMN(scanner,1);
-                    scanner->current++;
-                }
-                INC_COLUMN(scanner,1);
-                scanner->current++;
-            }
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_STRING, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '\'': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            if (*scanner->current == '\\') {
-                INC_COLUMN(scanner,1);
-                scanner->current++;
-            } else if (scanner->current == scanner->end) { // @ERROR: EOF in character literal
-                return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->current, 1};
-            }
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_CHAR, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case '.': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_DOT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        case ':': {
-            scanner->current++;
-            if (*scanner->current == '=') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_COLON_EQUALS, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else if (*scanner->current == ':') {
-                INC_COLUMN(scanner,2);
-                scanner->current++;
-                return (Token){TT_COLON_COLON, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else {
-                INC_COLUMN(scanner,1);
-                return (Token){TT_COLON, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-        case ';': {
-            INC_COLUMN(scanner,1);
-            scanner->current++;
-            return (Token){TT_SEMICOLON, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            break;
-        }
-        default: { // Identifier or number or keyword
-            if (is_alpha(*scanner->current)) {
-                INC_COLUMN(scanner,1);
-                scanner->current++;
-                while (is_alpha(*scanner->current) || is_digit(*scanner->current)) {
-                    INC_COLUMN(scanner,1);
-                    scanner->current++;
-                }
-                TokenType ident_type = TT_IDENT;
-                switch (*scanner->start) {
-                    case 'b': ident_type = check_keyword(scanner, 1, 4, "reak", TT_BREAK); break;
-                    case 'c':
-                        if (scanner->current - scanner->start > 3) {
-                            switch (scanner->start[1]) {
-                                case 'a':
-                                    if (scanner->current - scanner->start == 4 && scanner->start[2] == 's') {
-                                        if (scanner->start[3] == 'e') {
-                                            ident_type = TT_CASE;
-                                        } else if (scanner->start[3] == 't') {
-                                            ident_type = TT_CAST;
-                                        }
-                                    } break;
-                                case 'o': ident_type = check_keyword(scanner, 2, 6, "ntinue", TT_CONTINUE); break;
-                            }
-                        } break;
-                    case 'e': ident_type = check_keyword(scanner, 1, 3, "num", TT_ENUM); break;
-                    case 'f':
-                        if (scanner->current - scanner->start > 2) {
-                            switch (scanner->start[1]) {
-                                case 'a': ident_type = check_keyword(scanner, 2, 3, "lse", TT_FALSE); break;
-                                case 'o': if (scanner->current - scanner->start == 3 && scanner->start[2] == 'r') { ident_type = TT_FOR; } break;
-                            }
-                        } break;
-                    case 'i':
-                        if (scanner->current - scanner->start > 1) {
-                            switch (scanner->start[1]) {
-                                case 'f': if (scanner->current - scanner->start == 2) { ident_type = TT_IF; } break;
-                                case 'n': ident_type = check_keyword(scanner, 2, 5, "clude", TT_INCLUDE); break;
-                            }
-                        } break;
-                    case 'r': ident_type = check_keyword(scanner, 1, 5, "eturn", TT_RETURN); break;
-                    case 's':
-                        if (scanner->current - scanner->start > 2) {
-                            switch (scanner->start[1]) {
-                                case 'o': if (scanner->current - scanner->start == 3 && scanner->start[2] == 'a') { ident_type = TT_SOA; } break;
-                                case 't': ident_type = check_keyword(scanner, 2, 4, "ruct", TT_STRUCT); break;
-                                case 'w': ident_type = check_keyword(scanner, 2, 4, "itch", TT_SWITCH); break;
-                            }
-                        } break;
-                    case 't': ident_type = check_keyword(scanner, 1, 3, "rue", TT_TRUE); break;
-                    case 'u':
-                        if (scanner->current - scanner->start == 5) {
-                            switch (scanner->start[1]) {
-                                case 'n': ident_type = check_keyword(scanner, 2, 3, "ion", TT_UNION); break;
-                                case 's': ident_type = check_keyword(scanner, 2, 3, "ing", TT_USING); break;
-                            }
-                        } break;
-                    case 'w': ident_type = check_keyword(scanner, 1, 4, "hile", TT_WHILE); break;
-                }
-                return (Token){ident_type, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else if (is_digit(*scanner->current)) {
-                bool floating_point = false;
-                INC_COLUMN(scanner,1);
-                scanner->current++;
-                while (is_digit(*scanner->current)) {
-                    INC_COLUMN(scanner,1);
-                    scanner->current++;
-                }
-                if (*scanner->current == '.' && is_digit(*(scanner->current + 1))) {
-                    INC_COLUMN(scanner,2);
-                    scanner->current += 2;
-                    floating_point = true;
-                    while (is_digit(*scanner->current)) {
-                        INC_COLUMN(scanner,1);
-                        scanner->current++;
-                    }
-                }
-                return (Token){floating_point ? TT_FLOAT : TT_INT, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            } else { // @ERROR: Unkown character
-                return (Token){TT_EOF, scanner->line_number, scanner->column_number, scanner->start, scanner->current - scanner->start};
-            }
-            break;
-        }
-    }
+
+    munmap(source, file_size);
+
+    *token_count_out = token_array_length;
+    return tokens;
 }

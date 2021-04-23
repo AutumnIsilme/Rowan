@@ -9,7 +9,7 @@ if "%~1"=="-r" goto :release
 echo. 
 echo ------------ Building debug ------------
 echo. 
-cl  /Fe"rwc" -Zi ../src/main.cpp ../src/Lexer.cpp
+cl  /Fe"rwc" -Zi ../src/main.c ../src/Scanner.c ../src/Timer.c ../src/Token.c
 goto :end
 :release
 echo. 

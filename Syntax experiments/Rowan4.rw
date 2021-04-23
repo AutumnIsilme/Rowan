@@ -1,21 +1,26 @@
-import "stdio"
+import stdio
 
 struct Grid_Mode {
     int32 columns, rows
     bool[] filled
 }
 
-main : (int argc, char **argv) -> int {
-    for i: 0..10 {
+main : (argc: int, argv: char**) -> int {
+    using stdio
+    for i := 0..10 {
         println("Hello, World %d!", i)
     }
 
-    int32 sentry_var = 12
-    while sentry_var != 0 {
-        sentry_var = foo(sentry_var)
+    for (u8 i = 0; i < 10; i += 2) {
+        println("Hello, Increment! %d", i)
     }
 
-    inferred := "Hello, World!"
+    sentry_var : int32 = 12
+    while sentry_var != 0 {
+        sentry_var = foo.foo(sentry_var)
+    }
+
+    auto inferred = "Hello, World!"
 
     extern C {
         int a = 12;
@@ -23,8 +28,8 @@ main : (int argc, char **argv) -> int {
         printf("%d %d\n", a, b);
     }
 
-    const VGA_WIDTH : 80 //Constant variable, type inferred
-    int counter
+    VGA_WIDTH :: 80 //Constant variable, type inferred
+    counter: int
 
     if counter < VGA_WIDTH {
         buffer[counter++] = 'd'
@@ -37,38 +42,28 @@ main : (int argc, char **argv) -> int {
     extern ASM {
         mov rax, 12
         mov rbx, 13
-        int 0x20
+        int 0x60
     }
     using foo;
     a, b, c := foo(true, {1, 2, 3, 4, 5})
     printf("%s", c)
     //printf("%s", auto a, b, . = foo(true, {1, 2, 3, 4, 5})) Do this syntax? Probably not - too confusing
 
-    int16 d, bool e, string f = foo(true, {1, 2, 3, 4, 5}); //Auto-cast and unpack
+    d: int32, e: bool, f: string = foo(true, {1, 2, 3, 4, 5}); //Auto-cast and unpack
     
     return 0
 }
 
 module foo {
-    foo : (int32 i) -> int32 {
+    foo(i: int32) -> int32 {
         return i - 1 //Could do some more complicated stuff here, for example turing machine simulation
     }
 
-    foo : (double i) -> double {
+    foo(i: double) -> double {
         return i % 7 + i / 7
     }
 
-    foo : (bool active, int[5] data) -> (int, bool, string) {
+    foo(active: bool, data: int[5]) -> (int, bool, string) {
         return data[3], active, f"data: {data[0]}, {data[1]}, {data[2]}, {data[3]}, {data[4]}"
-    }
-
-    foo : (bool active) -> (string a, int b = 0) {
-        if active {
-            a = "True"
-            b++
-        } else {
-            a = "False"
-        }
-        return
     }
 }

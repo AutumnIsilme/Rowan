@@ -1,0 +1,16 @@
+dispatch_function_parsers : (tokens: Token[...]) -> (trees: AST[...]) {
+    func_start_stack :: stack(int)
+    for tokens {
+        if it.type == TT_IDENT && (it+1).type == TT_COLON && (it+2).type == TT_LPAREN {
+            it += 3
+            while (it++).type == TT_IDENT {
+                if it.type == TT_COLON && (it+1).type == TT_TYPE {}
+                else {
+                    break;
+                }
+            }
+            if (it.type != )
+            if (it.type == TT_LCURLY) {}
+        }
+    }
+}

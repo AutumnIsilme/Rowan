@@ -1,0 +1,152 @@
+import allocators
+/*
+Allocator is defined somewhat as:
+interface Allocator($T) {
+    func alloc() -> T^;
+    ...
+}
+
+This allows implementations to be defined as (for example):
+module pool_allocator($T) is Allocator(T) {
+    func alloc() -> T^ {
+
+    }
+    ...
+}
+*/
+
+// A module is a collection of functions and data structures.
+// It is possible to also include 'module globals', which are
+// static variables. Modules are roughly equivalent to C++
+// namespaces, except with some extras.
+module linear_algebra {
+    // In OO languages such as C++, classes exist. The alternative to
+    // classes here is to specify what is on the left and right of a
+    // function call, as seen in `inverse`.
+    module Mat4x4 {
+        // This allocator can be configured at build time to use a particular
+        // strategy for allocation. This program shows a pool allocator being
+        // set up in the `build` function.
+        // An Allocator is a polymorphic interface.
+        // `final` means that it can be set once on construction or at build
+        // time, and from then on is treated as const.
+        using module_ref allocator is allocators.Allocator(Mat4x4);
+
+        // This is a polymorphic struct. Various types can be passed when
+        // creating one of these. For example, you might want a Mat4x4(float64)
+        // and a Mat4x4(u64).
+        struct Mat4x4($T) {
+            // I can refer to m.data[0] or m.a and they will mean the same thing.
+            using union {
+                using struct {
+                    a, b, c, d: T;
+                    e, f, g, h: T;
+                    i, j, k, l: T;
+                    m, n, o, p: T;
+                };
+                data: T[16];
+            };
+        }
+        
+        // If you tried to calculate the inverse of a matrix with type `string`,
+        // it probably wouldn't work. Every function that takes a Mat4x4 will be
+        // compiled and type checked for each variant of Mat4x4 that is required
+        // so invalid polymorph types will be detected.
+        // This pre-name syntax indicates that the function is called as
+        // `m.inverse()`, which means it can be treated as a method. Only one
+        // variable may be on the left until I figure out if it is worth letting
+        // there be multiple.
+        func (m: Mat4x4($T)^).inverse() -> Mat4x4(T)^ {
+            // This `...` just means I couldn't be bothered to actually write the code here.
+            // It probably isn't valid code.
+            ...
+        }
+        func identity() -> Mat4x4^ {
+            ...
+        }
+        func new(...) -> Mat4x4^ {
+            // The `allocate` function here is a member of the polymorphed module referred
+            // to by the `allocator` module variable, brought into this namespace by the
+            // `using`.
+            m := allocate();
+            ...
+            return m;
+        }
+    }
+
+    module Vec3 {
+        using allocator: allocators.Allocator(Vec3)^;
+        // This is a `limited_type`. It can be used in a polymorphic struct or
+        // procedure to limit the types allowed. Types like numeric_type would be
+        // defined in the standard library by default, but is included here for
+        // illustration purposes. It might also be used in the same way as a
+        // `limited_pointer` to pass a value instead.                                   @TODO: Unify limited_pointer and limited_type?
+        limited_type numeric_type { int, float, u8, u16, u32, u64, s8, s16, s32, s64, ... };
+        //limited_type big_number_type { sint64, float64 };
+        // This `limited_type` can be used to catch polymorph errors before compiling
+        // every use of the struct. This would have an almost identical effect to the
+        // Mat4x4 example above, but you can see what types are allowed and whether
+        // the type you want to use will be allowed by looking at the struct/procedure.
+        // If you want to add a type to a limited_type, it can be done in the same way
+        // as with a `limited_pointer`.
+        struct Vec3($T: numeric_type) {
+            using union {
+                using struct {
+                    x, y, z: T;
+                };
+                using struct {
+                    r, g, b: T;
+                };
+                data: T[3];
+            }
+        }
+        // The `$` in the first `Vec3($T)` indicates that that is where `T` is determined
+        // from. You can't call `cross` with a `float` vec3 and `u64` vec3, but you can
+        // decide which argument should be the master of what type is required. This will
+        // change the error message and may have an effect on whether the program compiles
+        // successfully in some scenarios, depending on what you are doing with polymorphism.
+        func cross(v1: Vec3($T)^, v2: Vec3(T)^) -> Vec3(T)^ {
+            ...
+        }
+        func new(x: $T: numeric_type, y: T, z: T) -> Vec3(T)^ {
+            ...
+        }
+    }
+}
+
+module my_module {
+    func (v: Vec3^).do_something() -> u64 {
+        
+    }
+}
+
+func main(args: char^[]) -> int {
+    using linear_algebra;
+
+    v1 := Vec3.new(1, 2, 3);
+    v2 := Vec3.new(5, 2, 4);
+    v3 := Vec3.cross(v1, v2);
+    return cast(int, v1.do_something() + v3.x);
+}
+
+func build(args: char^[]) -> int {
+    // For demonstration purposes, each of these is set up as a pool allocator
+    // with 1024 reserved entries at program load time. These allocators will
+    // do their best to be positioned on page boundaries so they can be remapped
+    // easily when more entries are required.
+    // No runtime is required to suport these as the memory will be reserved in
+    // the .bss segment with a default static pointer to remap when required.
+    linear_algebra.Mat4x4.allocator = allocators.pool_allocator(Mat4x4, 1024);
+    linear_algebra.Vec3.allocator = allocators.pool_allocator(Vec3, 1024);
+    ...
+}
+
+// We should probably ask the compiler to run the build function
+// at build time to set up the build process. For a large project,
+// the build function would likely be specified in a file of its
+// own on which the compiler is invoked. The build function can
+// then manage the process of building the rest of the program.
+#build build
+
+// This is getting too far into the depths into which C++ has fallen.
+// I'm going to turn around now and ignore this concept.

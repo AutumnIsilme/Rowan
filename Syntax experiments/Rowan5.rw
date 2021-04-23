@@ -1,0 +1,118 @@
+import stdio
+
+struct Grid_Mode {
+    int32 columns, rows
+    bool[] filled
+}
+
+main(int argc, char** argv) -> int {
+    for i : 0..10 {
+        println("Hello, World %d!", i)
+    }
+    for i := 0, i < 10, i++ {
+        println("Hello, World {}!", i)
+    }
+
+    for {
+        range := 5; i := get_min_from_range_for_this_thing(5); i0 := i }, {
+        i < range
+    }, {
+        if i < 4 {
+            i, i0 = fibonnaci(i, i0)
+        } else {
+            i++
+        }
+    } {
+        println("Hello, World {}!", i)
+    }
+
+    get_min_from_range_for_this_thing(int n) -> int {
+        return 0
+    }
+
+    int32 sentry_var = 12
+    while sentry_var != 0 {
+        sentry_var = foo(sentry_var)
+    }
+
+    inferred := "Hello, World!"
+
+    extern C {
+        int a = 12;
+        int b = 13;
+        printf("%d %d\n", a, b);
+    }
+
+    VGA_WIDTH : const = 80 //Constant variable, type inferred
+    int counter
+
+    if counter < VGA_WIDTH {
+        buffer[counter++] = 'd'
+    } else if false {
+
+    } else {
+        println("Error: Counter has exceeded VGA_WIDTH!")
+    }
+
+    extern ASM {
+        mov rax, 12
+        mov rbx, 13
+        int 0x20
+    }
+    using foo;
+    a, b, c := foo(true, {1, 2, 3, 4, 5})
+    printf("%s", c)
+    //printf("%s", auto a, b, . = foo(true, {1, 2, 3, 4, 5})) Do this syntax? Probably not - too confusing
+
+    int16 d, bool e, string f = foo(true, {1, 2, 3, 4, 5}); //Auto-cast and unpack
+    
+    uint g = 5 while g { println(g--) } // Syntax Error
+    uint g = 5; while g { println(g--) } // Allowed
+    u32 g=5;while g{println(g--)} // Minified
+    /* Newlines and semicolons are equivalent, but newlines are also ignored in most cases. */
+    a = 13
+      + 14
+      + 15
+    b = 5
+    while a {
+        println(a--);
+    }
+    /* The only case a newline is not ignored is when a statement is in a possibly finished state and a token
+       that cannot continue the statement follows it */
+    a = 13;
+    b = 15;
+    /* Since there must be an operator after an atom, the first statement terminates and a new statement is started */
+    a = 13 b = 15
+    /* Since there is no newline, this is a syntax error. The statement is not finished because a terminating token
+       was not found. */
+    a = 13 + b = 5
+    /* The above is not allowed. An '=' operator is not allowed in a constant expression. */
+    a = b = 5
+    /* That is not allowed either. */
+    
+    return 0
+}
+
+module foo {
+    foo(int32 i) -> int32 {
+        return i - 1 //Could do some more complicated stuff here, for example turing machine simulation
+    }
+
+    foo(double i) -> double {
+        return i % 7 + i / 7
+    }
+
+    foo(bool active, int[5] data) -> (int, bool, string) {
+        return data[3], active, f"data: {data[0]}, {data[1]}, {data[2]}, {data[3]}, {data[4]}"
+    }
+
+    foo(bool active) -> (string a, int b = 0) {
+        if active {
+            a = "True"
+            b++
+        } else {
+            a = "False"
+        }
+        return
+    }
+}

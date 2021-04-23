@@ -1,0 +1,175 @@
+using import allocator;
+/*
+struct Allocator {
+    allocate: const () -> void^;
+    free: const (void^) -> void;
+
+    stride: const u64;
+}
+*/
+
+module linear_algebra {
+    vec3_allocator: #build_const Allocator;
+    mat4_allocator: #build_const Allocator;
+
+    struct Mat4 {
+        #default_allocator (mat4_allocator);
+
+        using union {
+            using struct {
+                a, b, c, d: float64;
+                e, f, g, h: float64;
+                i, j, k, l: float64;
+                m, n, o, p: float64;
+            };
+            data: float64[16];
+        };
+    }
+
+    func mat4_inverse(m: Mat4^) -> Mat4^ {
+        ...
+    }
+    func mat4_identity() -> Mat4^ {
+        m := alloc Mat4;
+        *m = Mat4{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+        return m;
+    }
+
+    struct Vec3 {
+        #default_allocator (vec3_allocator);
+
+        using union {
+            using struct {
+                x, y, z: float64;
+            };
+            using struct {
+                r, g, b: float64;
+            };
+            data: float64[3];
+        }
+    }
+
+    func vec3_cross(left: Vec3^, right: Vec3^) -> Vec3^ {
+        v := alloc Vec3;
+        *v = Vec3{
+            left.y * right.z - left.z * right.y,
+            left.z * right.x - left.x * right.z,
+            left.x * right.y - left.y * right.x
+        };
+        return v;
+    }
+    func vec3_create(x: float64, y: float64, z: float64) -> Vec3^ {
+        v := alloc Vec3;
+        *v := Vec3{x, y, z};
+        return v;
+    }
+}
+
+func main(args: string[]) -> int {
+    using linear_algebra;
+    // Use a custom allocator rather than the default allocator in calls from this function
+    using Vec3.allocator = my_vec3_allocator;
+
+    mat := Mat4{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    inv_mat_p := mat4_inverse(^mat);
+    inv_mat := *inv_mat_p;
+    free(inv_mat_p);
+
+    mat2 := mat4_identity();
+    inv_mat2 := mat4_inverse(mat2);
+
+    // Implicitly memcmp for comparing struct types?
+    if (*inv_mat2 != inv_mat) {
+        libc.stdio.printf("Something didn't work!");
+        return 1;
+    }
+    return 0;
+}
+
+func doOtherThing() -> bool {
+    // Use the default allocator in calls from this function, even if a previous function said otherwise
+    using Vec3.allocator = default;
+    ...
+}
+
+module a_module_that_uses_things {
+    using linear_algebra;
+    // Use the default allocator but set it to use a different area of memory than default
+    using Vec3.allocator = default
+    using Vec3.allocator.range = separate;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+using import allocator;
+
+module linear_algebra {
+    vec3_allocator: const Allocator;
+    mat4_allocator: const Allocator;
+
+    struct Mat4 {
+        using union {
+            using struct {
+                a, b, c, d: float64;
+                e, f, g, h: float64;
+                i, j, k, l: float64;
+                m, n, o, p: float64;
+            };
+            data: float64[16];
+        };
+    }
+
+    mat4_inverse : (m: Mat4^) -> Mat4^ {
+        ...
+    }
+    mat4_identity : () -> Mat4^ {
+        m := mat4_allocator.allocate();
+        *m = Mat4{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+        return m;
+    }
+
+    struct Vec3 {
+        using union {
+            using struct {
+                x, y, z: float64;
+            };
+            using struct {
+                r, g, b: float64;
+            };
+            data: float64[3];
+        }
+    }
+
+    vec3_cross : (left: Vec3^, right: Vec3^) -> Vec3^ {
+        v := vec3_allocator.allocate();
+        *v = Vec3{
+            left.y * right.z - left.z * right.y,
+            left.z * right.x - left.x * right.z,
+            left.x * right.y - left.y * right.x
+        };
+        return v;
+    }
+    vec3_create : (x: float64, y: float64, z: float64) -> Vec3^ {
+        v := vec3_allocator.allocate();
+        *v := Vec3{x, y, z};
+        return v;
+    }
+}
+
+main : (args: string[]) -> int {
+    using linear_algebra;
+    mat := Mat4{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    inv_mat_p := mat4_inverse(^mat);
+    inv_mat := *inv_mat_p;
+    mat4_allocator.free(inv_mat_p);
+
+    mat2 := mat4_identity();
+    inv_mat2 := mat4_inverse(mat2);
+
+    // Implicitly memcmp for comparing struct types?
+    if (*inv_mat2 != inv_mat) {
+        libc.stdio.printf("Something didn't work!");
+        return 1;
+    }
+    return 0;
+}

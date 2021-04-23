@@ -1,0 +1,227 @@
+EQUIVALENCE CLASSES:
+    white:         space, \t
+    cr:            \r
+    lf:            \n
+    letter:        a-zA-Z_
+    literal_base:  b B o O x X
+    zero:          0
+    digit:         1-9
+
+    plus:          +  // ++ +=
+    hyphen:        -  // -> -- -=
+    star:          *
+    slash:         /  // // /* */ /=
+    less:          <  // << <= <<=
+    greater:       >  // >> >= >>= ->
+    equal:         =
+    ampersand:     &  // && &=
+    pipe:          |  // || |=
+    semicolon:     ;
+    equable:
+                ^  // ^=
+                !  // !=
+                %  // %=
+                :  // :=
+
+    single_quote:  '
+    double_quote:  "
+    period:        .
+    misc:          ~ # , ? @ $ ( ) { } [ ] \
+
+    eof:           \0
+
+STATE MACHINE:
+    START:
+        whitespace -> START
+        letter, literal_base -> S_SAW_LETTER (final)
+        zero      -> S_SEEN_ZERO
+        digit     -> S_SAW_NUMBER (final)
+        plus      -> S_SEEN_PLUS
+        hyphen    -> S_SEEN_HYPHEN
+        star      -> S_SEEN_STAR
+        slash     -> S_SEEN_SLASH
+        less      -> S_SEEN_LESS
+        greater   -> S_SEEN_GREATER
+        equal     -> S_SEEN_EQUAL
+        ampersand -> S_SEEN_AMPERSAND
+        pipe      -> S_SEEN_PIPE
+        equable   -> S_SEEN_EQUABLE
+        single_quote -> S_CHAR (final)
+        double_quote -> S_STRING (final)
+        period    -> S_SINGLE_OP (final)
+        misc      -> S_SINGLE_OP (final)
+        cr        -> S_START_NEWLINE
+        lf, semicolon -> S_NEWLINE (final)
+        error, utf8_1 -> S_ERROR (final)
+        eof       -> S_EOF (final)
+
+    S_SEEN_ZERO:
+        literal_base -> S_SAW_NUMERIC_LITERAL (final)
+        zero, digit -> S_SAW_NUMBER (final)
+        period  -> S_SAW_FLOAT (final)
+        default -> S_LONE_ZERO (final)
+
+    S_SEEN_PLUS:
+        plus    -> S_DOUBLED_OP (final)
+        equal   -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_SEEN_HYPHEN:
+        hyphen  -> S_DOUBLED_OP (final)
+        equal   -> S_EQUABLE (final)
+        greater -> S_ARROW (final)
+        default -> S_SINGLE_OP (final)
+
+    S_SEEN_STAR:
+        equal -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_SEEN_SLASH:
+        slash -> S_SINGLE_LINE_COMMENT (final)
+        star  -> S_MULTI_LINE_COMMENT (final)
+        equal -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_SEEN_LESS:
+        less -> S_LESS_LESS
+        equal -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_LESS_LESS:
+        equal -> S_SHIFT_EQUAL (final)
+        default -> S_DOUBLED_OP (final)
+
+    S_SEEN_GREATER:
+        greater -> S_GREATER_GREATER
+        equal -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_GREATER_GREATER:
+        equal -> S_SHIFT_EQUAL (final)
+        default -> S_DOUBLED_OP (final)
+
+    S_SEEN_EQUAL:
+        equal -> S_DOUBLED_OP (final)
+        default -> S_SINGLE_OP (final)
+
+    S_SEEN_AMPERSAND:
+        ampersand -> S_DOUBLED_OP (final)
+        equal -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_SEEN_PIPE:
+        pipe -> S_DOUBLED_OP (final)
+        equal -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_SEEN_EQUABLE:
+        equal -> S_EQUABLE (final)
+        default -> S_SINGLE_OP (final)
+
+    S_START_NEWLINE:
+        lf -> S_NEWLINE (final)
+        default -> S_ERROR (final)
+
+TOKENS:
+    /* Keywords */
+    TT_IF = 0,
+    TT_FOR,
+    TT_WHILE,
+    TT_RETURN,
+    TT_BREAK,
+    TT_CONTINUE,
+    TT_SWITCH,
+    TT_CASE,
+    TT_INCLUDE,
+    TT_USING,
+    TT_CAST,
+    TT_STRUCT,
+    TT_ENUM,
+    TT_UNION,
+    TT_SOA,
+
+    TT_TRUE,
+    TT_FALSE,
+
+    /* Operators and symbols*/
+    TT_LPAREN,
+    TT_RPAREN,
+    TT_LSQUARE,
+    TT_RSQUARE,
+    TT_LCURLY,
+    TT_RCURLY,
+
+    TT_PLUS_PLUS,    /* ++ */
+    TT_PLUS_EQUAL,  /* += */
+    TT_PLUS,         /* + */
+
+    TT_MINUS_MINUS,  /* -- */
+    TT_MINUS_EQUAL, /* -= */
+    TT_ARROW,        /* -> */
+    TT_MINUS,        /* - */
+
+    TT_SLASH_EQUAL,  /* /= */
+    TT_SLASH,        /* / */
+
+    /* TT_STAR_STAR,    /* ** */
+    TT_STAR_EQUAL,   /* *= */
+    TT_STAR,         /* * */
+
+    TT_EXCL_EQUAL,   /* != */
+    TT_EXCL,         /* ! */
+
+    TT_EQUAL_EQUAL,  /* == */
+    TT_EQUAL,        /* = */
+
+    TT_PERCENT_EQUAL,/* %= */
+    TT_PERCENT,      /* % */
+
+    TT_CARET_EQUAL,  /* ^= */
+    TT_CARET,        /* ^ */
+
+    TT_AMPERSAND_AMPERSAND, /* && */
+    TT_AMPERSAND_EQUAL,     /* &= */
+    TT_AMPERSAND,           /* & */
+
+    TT_PIPE_PIPE,    /* || */
+    TT_PIPE_EQUAL,   /* |= */
+    TT_PIPE,         /* | */
+
+    TT_LESS_LESS,        /* << */
+    TT_LESS_LESS_EQUAL,  /* <<= */
+    TT_LESS_EQUAL,     /* <= */
+    TT_LESS,           /* < */
+
+    TT_GREATER_GREATER,        /* >> */
+    TT_GREATER_GREATER_EQUAL,  /* >>= */
+    TT_GREATER_EQUAL,     /* >= */
+    TT_GREATER,           /* > */
+
+    TT_COMMA,        /* , */
+
+    TT_DOT,          /* . */
+
+    TT_COLON_EQUAL, /* := */
+    /* TT_COLON_COLON,  // Unused? */
+    TT_COLON,        /* : */
+    TT_SEMICOLON,    /* ; */
+
+    TT_TILDE,     /* ~ */
+    TT_HASH,      /* # */
+    TT_DOLLAR,    /* $ */
+    TT_AT,        /* @ */
+    TT_QUESTION,  /* ? */
+    TT_BACKSLASH, /* \ */
+
+    /* Other token types*/
+    TT_IDENT,
+    TT_INT,
+    TT_FLOAT,
+    TT_STRING,
+    TT_CHAR,
+
+    TT_NEWLINE,
+    TT_EOF
+
+GRAMMAR:
+    

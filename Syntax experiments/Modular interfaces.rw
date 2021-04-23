@@ -1,0 +1,152 @@
+// An interface is a module with no implementation
+// that can be set to refer to a specific implementation
+// at either build time or runtime.
+interface RendererAPI {
+    func init() -> void
+    func shutdown() -> void
+    func set_viewport(x: u32, y: u32, width: u32, height: u32) -> void
+
+    func clear(colour: ^vec4) -> void
+    func clear() -> void
+    func draw_indexed(mesh: ^Mesh) -> void
+}
+
+struct RendererAPIData {
+    draw_queue: DrawTask[MAX_DRAW_TASKS]
+    draw_queue_index: u32
+    // ...
+}
+
+// These would probably generally be in separate files
+module OpenGLRendererAPI is RendererAPI {
+
+}
+
+// Module declaration separate to implementation. Can be split across files.
+module VulkanRendererAPI is RendererAPI;
+
+// Implementation for the above declaration. Has the same attributes, but is simpler.
+module VulkanRendererAPI {
+
+}
+
+/*
+   When a module declaration is appended with include, those are the other files that
+   include the code for this module.
+   A declaration for the files included in a module that is included in other files
+   than the file it is defined in must be present in the file defining the build, but
+   the file includes will be treated recursively, so just a module root file can be
+   present.
+   Because of this fact, all 
+*/
+module DX12RendererAPI
+    is RendererAPI
+    include "DX12a.rw", "DX12b.rw";
+
+limited_pointer Component;
+
+struct ChairComponent is Component {
+    occupied : bool;
+    sittable : bool;
+    sit_height : f32;
+}
+
+enum ErrorType {
+    T1,
+    T2,
+    T3
+}
+
+enum ErrorType2 is ErrorType {
+    T4,
+    T5,
+    T6
+}
+
+enum ErrorType3 is ErrorType {
+    T7,
+    T8,
+    T9
+}
+/* The above 3 error type enums will not clash and will be able to be treated as numerical constants */
+
+GameObject : struct {
+    pos : Transform;
+    model : Mesh;
+    //components_present : bitfield(Component.num_enum_vals) //Value inside braces is the number of bits used.
+    components : Component^[Component];
+    components : enum_list(Component); // For specifically this circumstance where I want to be able to have one of any type 
+    // of the enum but not necessarily all of them
+}
+
+func register_component(using go: ^GameObject, component: ^Component) -> void {
+    if components[component.type] {
+        CORE_ASSERT(components[component.enum_index)] != null, //null = all zeros, or completely empty
+            "You cannot add a component to an GameObject if a component of that type already exists on that GameObject!");
+        return;
+    }
+    components[component.enum_index] = component;
+}
+
+struct FlightComponent is Component {
+    max_height : f32;
+    max_speed : f32;
+    max_ascension_rate : f32;
+}
+
+struct_enum IpAddr {
+    V4 {
+        a, b, c, d: u8;
+    },
+    V6 {
+        addr: string;
+    }
+} 
+
+create_ip_v6 : (addr : String) -> IpAddr {
+    return IpAddr.V6(addr);
+}
+
+send_message : (addr : IpAddr, msg : Message) -> Message {
+    socket : Socket;
+    switch (addr) {
+    case IpAdder.V4 -> { socket = OpenV4Socket(addr.a, addr.b, addr.c, addr.d); }
+    case IpAddr.V6 -> { socket = OpenV6Socket(addr.addr); }
+    }
+    send_data(socket, serialize_message(msg));
+}
+
+serialize_message : ()
+
+struct GameObjects {
+    positions : Transform[];
+    models : Mesh[];
+    chair_components : ChairComponent[];
+}
+
+/*
+10000 objects in a scene
+20 types of component?
+-> 20*10000*8=1600000, or 1.6MB of memory in pointers. 
+
+Most objects will only be static, perhaps with an animation component.
+
+AI component
+Transform
+Mesh
+Item
+*/
+
+func main(args: []string) -> () {
+    parsed_args :: parse_args(args);
+    if (parsed_args.openGL) {
+        interface RendererAPI OpenGLRendererAPI
+    }
+    else if (parsed_args.vulkan) {
+        interface RendererAPI VulkanRendererAPI
+    }
+
+    //These are automatically switching function pointers set at runtime, 
+    //possible to change during runtime, although this might be difficult.
+    //Perhaps have a way to specify that it can only be set in the main method before anything else happens?
+}

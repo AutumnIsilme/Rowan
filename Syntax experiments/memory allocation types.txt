@@ -1,0 +1,10 @@
+
+0. Static memory, lasting the entire lifetime of the program.
+
+1. Short-term memory, no longer required at the end of the function or block
+
+2. Long-term memory, with clearly defined lifetimes
+
+3. Long-term memory, linked to the lifetime of a major component of the program
+
+4. Long-term memory, with a badly-defined lifetime

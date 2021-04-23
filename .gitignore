@@ -12,15 +12,11 @@ Rowan.code-workspace
 Compiler/rwc.sln
 
 #Build files
+*.o
 *.obj
 *.ilk
 *.pdb
 *.exe
 *.out
-test_1M_lines.rw
-
-Compiler/srcpp/main.dSYM/
 
 .vscode/
-
-Compiler/test_*M_lines.rw

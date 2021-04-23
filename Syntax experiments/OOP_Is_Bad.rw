@@ -1,0 +1,49 @@
+import libc.stdio as stdio
+import treewalker
+
+module MyClass {
+    struct MyClass {
+        using static const struct {
+            MyClassMethod: (a: int) -> int;
+        } methods;
+        a: int;
+    }
+
+    func MyClass(a: int) -> MyClass {
+        return MyClass{a};
+    }
+
+    func MyClassMethod(this: MyClassData^, a: int) -> int {
+        return this.a * a;
+    }
+}
+
+// Implicit void
+func main(args: char^[]) {
+    using MyClass.MyClass as MyClass; // Imported namespaces allow overlap.
+    using MyClass;
+
+    myClassInstance := MyClass(5); // Is there a MyClass that can be called in this namespace?
+                                   // Yes, so call it.
+    
+    stdio.printf("%d\n", myClassInstance.MyClassMethod(7)); // Should print 35
+    return 1;
+}
+
+func build(args: char^[]) {
+    // Locate all 'methods' static const structs inside structs.
+    // Overwrite the arguments for the functions inside.
+    // Add a hook to calls that include that call those functions.
+    // Also add a hook for type errors on calling or assigning that function
+    // to give better error messages.
+}
+
+func call_hook(node: Node^) {
+    // Only allow member access to be the called node.
+    // Rearrange the tree to pass the value on which this is accessed as the
+    // 'this' argument.
+}
+
+func error_hook(ndoe: Node^) -> bool {
+    // Tell the user that they can't do whatever with a method.
+}

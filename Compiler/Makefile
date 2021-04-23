@@ -2,10 +2,10 @@ CXX = clang++
 CC = gcc
 
 CXXFLAGS := -std=c++1z
-CFLAGS := -std=c11
+CFLAGS := -std=c11 -Iinclude -Wall -Wextra -Wpedantic -Wno-newline-eof
 LDFLAGS := 
 
-OBJS := src/main.o src/Scanner.o src/Token.o src/Timer.o
+OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Frontend/HashTable.o src/Error.o src/Timer.o
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -28,12 +28,14 @@ release: build
 debug: build
 
 test: build
-	./build/rwc.out
+	build/rwc.out
 
 celan: clean
 clean:
 	rm -rf src/*.o
 	rm -rf src/*.d
+	rm -rf src/Frontend/*.o
+	rm -rf src/Frontend/*.d
 	rm -rf srcpp/*.o
 	rm -rf srcpp/*.d
 	rm -rf build

@@ -1,31 +1,19 @@
-#ifndef SCANNER_H_GUARD
-#define SCANNER_H_GUARD
+#ifndef _SCANNER_H
+#define _SCANNER_H
 
-#ifdef __c_plus_plus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdbool.h>
 
-#include "Types.h"
-#include "Error.h"
-#include "Token.h"
+#include <Frontend/Common.h>
+#include <Frontend/Token.h>
 
-typedef struct Scanner {
-    u32 line_number;
-    u32 column_number;
+Token *scan(const char *filename, uint64 *token_count_out);
 
-    const char* start;
-    const char* current;
-    const char* end;
-} Scanner;
-Scanner* scanner_init(const char* src, size_t src_size);
-Token scanner_next(Scanner* scanner);
-
-TokenType check_keyword(Scanner* scanner, int start, int length, const char* rest, TokenType type);
-
-#ifdef __c_plus_plus
+#ifdef __cplusplus
 }
 #endif
 
-#endif /* SCANNER_H_GUARD */
+#endif /* _SCANNER_H */

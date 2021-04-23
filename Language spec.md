@@ -15,7 +15,7 @@ break
 switch
 case
 ```
-####  @TODO Something I should probably name:
+#### @TODO Something I should probably name:
 ```
 include
 using
@@ -29,6 +29,29 @@ struct
 enum
 union
 soa
+```
+#### Types:
+```
+int
+uint
+float
+double
+string
+char
+s8
+s16
+s32
+s64
+s128
+u8
+u16
+u32
+u64
+u128
+f16
+f32
+f64
+f128
 ```
 
 ### Identifiers

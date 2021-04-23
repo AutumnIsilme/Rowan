@@ -137,6 +137,33 @@ foo (string: const char *, length: u32) -> int {
     
 }
 
+
+SHORTLIST:
+
+foo: int (string: const char^, length: u32) {
+
+}
+
+int foo(str: const char, length: u32) {
+    //Do stuff
+}
+
+fn foo(string: const char^, length: u32) -> int {
+
+}
+
+foo: (const char^, u32) -> int;
+
+Shorter list:
+
+foo: int (string: const char^, length: u32) {
+
+}
+
+func foo (string: const char^, length: u32) -> int {
+
+}
+
 /*-----------------------------------------------*/
 
 /* Function calls */
