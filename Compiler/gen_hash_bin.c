@@ -30,6 +30,7 @@ uint64 lengths[KEYWORD_LIST_LEN] = {0};
 //uint64 buckets_count[1<<SHIFT] = {0};
 struct TableEntry {
     uint64 hash;
+    void *text;
     uint8 types;
     uint8 present;
     uint8 probe_count;
@@ -41,24 +42,31 @@ uint64 buckets_types[1<<SHIFT] = {0};
 const int max_probe_count = SHIFT;
 
 int main() {
+    printf("%lu\n", sizeof(struct TableEntry));
     for (uint i = 0; i < 1<<SHIFT; i++) {
         buckets_types[i] = TT_NONE;
     }
-    for (uint i = 0; i < 17; i++) {
+    for (uint i = 0; i < KEYWORD_LIST_LEN; i++) {
         lengths[i] = strlen(KEYWORD_LIST[i]);
         hashes[i] = fnv_1(KEYWORD_LIST[i], lengths[i]);
-        struct TableEntry e = (struct TableEntry){hashes[i], i, 1, 0};
+        struct TableEntry e = (struct TableEntry){hashes[i], KEYWORD_LIST[i], i, 1, 0};
+        // Insert
         uint64 index = hashes[i] & ((1 << SHIFT) - 1);
         uint64 probe = 0;
-        // Insert
         int running = 1;
         while (running) {
-            while (buckets[index + probe].present && buckets[index + probe].probe_count >= probe && probe < max_probe_count) {
+            while (buckets[index + probe].present &&
+                buckets[index + probe].hash != hashes[i] &&
+                buckets[index + probe].probe_count >= probe &&
+                probe < max_probe_count) {
                 //printf("%llu: %d\n", probe, buckets[index + probe].probe_count);
                 probe++;
             }
             if (probe >= max_probe_count) {
                 printf("Would now reallocate, and table is broken.\n");
+            }
+            if (buckets[index + probe].hash == hashes[i]) {
+                if ()
             }
 
             //buckets_hashes[index + probe] = hashes[i];

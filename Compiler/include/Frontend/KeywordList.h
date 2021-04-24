@@ -4,7 +4,7 @@
 #include <Frontend/Common.h>
 #include <Frontend/Token.h>
 
-const uint16 KEYWORD_LIST_LEN = 19;
+#define KEYWORD_LIST_LEN 19
 
 const char *KEYWORD_LIST[KEYWORD_LIST_LEN] = {
     "if",

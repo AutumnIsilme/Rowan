@@ -4,23 +4,26 @@
 #include <Frontend/Common.h>
 #include <Frontend/Token.h>
 
+typedef struct _TableEntry {
+    uint64 hash;
+    void *data;
+    uint8 present;
+    uint8 probe_count;
+} TableEntry;
+
 typedef struct _HashTable {
     uint64 capacity;
     uint64 entry_count;
-    uint64 item_base_size;
-    uint64 item_size;
     uint8 probe_limit;
 
-    uint8  _unused_0;
-    uint16 _unused_1;
-    uint32 _unused_2;
-
-    uint8 entries[];
+    TableEntry *entries;
 } HashTable;
 
-HashTable *hash_table_create(uint8 initial_capacity_power, uint64 item_size);
+HashTable *hash_table_create(uint8 initial_capacity_power);
 void hash_table_destroy(HashTable *table);
-void hash_table_add(HashTable *table, uint64 hash, void* entry);
-void *hash_table_get(HashTable *table, uint64 hash);
+int hash_table_add(HashTable *table, TableEntry entry);
+int hash_table_remove(HashTable *table, uint64 hash);
+TableEntry *hash_table_get(HashTable *table, uint64 hash);
+void hash_table_realloc(HashTable *table);
 
 #endif /* _SYMBOL_TABLE_H */
