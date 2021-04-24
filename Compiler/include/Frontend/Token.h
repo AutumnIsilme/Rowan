@@ -6,6 +6,7 @@
 typedef enum __attribute__((__packed__)) _TokenType {
     /* Keywords */
     TT_IF = 0,
+    TT_ELSE,
     TT_FOR,
     TT_WHILE,
     TT_RETURN,
@@ -14,16 +15,18 @@ typedef enum __attribute__((__packed__)) _TokenType {
     TT_SWITCH,
     TT_CASE,
     TT_INCLUDE,
+    TT_IMPORT,
     TT_USING,
     TT_CAST,
     TT_STRUCT,
     TT_ENUM,
     TT_UNION,
     TT_SOA,
-    TT_TYPE,
 
     TT_TRUE,
     TT_FALSE,
+
+    TT_TYPE,
 
     /* Operators and symbols*/
     TT_LPAREN,
@@ -127,6 +130,7 @@ Token(TokenType type, uint32 line_number, uint32 column_number, const char* toke
 
 static const char* token_type_names[TT_NONE + 1] = {
     "TT_IF",
+    "TT_ELSE",
     "TT_FOR",
     "TT_WHILE",
     "TT_RETURN",
@@ -135,16 +139,18 @@ static const char* token_type_names[TT_NONE + 1] = {
     "TT_SWITCH",
     "TT_CASE",
     "TT_INCLUDE",
+    "TT_IMPORT",
     "TT_USING",
     "TT_CAST",
     "TT_STRUCT",
     "TT_ENUM",
     "TT_UNION",
     "TT_SOA",
-    "TT_TYPE",
 
     "TT_TRUE",
     "TT_FALSE",
+    
+    "TT_TYPE",
 
     "TT_LPAREN",
     "TT_RPAREN",

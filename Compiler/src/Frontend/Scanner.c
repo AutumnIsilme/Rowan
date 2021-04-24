@@ -1,3 +1,4 @@
+#include "Frontend/HashTable.h"
 #include <Frontend/Scanner.h>
 #include <Frontend/StateMachine.h>
 #include <Frontend/KeywordList.h>
@@ -13,11 +14,27 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+static HashTable *keywords_table;
+
 void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uint64 *token_array_capacity) {
     *token_array_capacity_bytes += *token_array_capacity_bytes;
     *tokens = realloc(*tokens, *token_array_capacity_bytes);
     if (*tokens == NULL) exit(1);
     *token_array_capacity += *token_array_capacity;
+}
+
+void init_keywords_table() {
+    keywords_table = hash_table_create(7);
+    for (uint i = 0; i < KEYWORD_LIST_LEN; i++) {
+        if (hash_table_add(keywords_table, (TableEntry){
+            .hash=fnv_1(KEYWORD_LIST[i].text, KEYWORD_LIST[i].len),
+            .data=&KEYWORD_LIST[i],
+            .present=true,
+            .probe_count=0,
+        })) {
+            printf("Failed to add keyword to table: %s\n", KEYWORD_LIST[i].text);
+        }
+    }
 }
 
 Token *scan(const char *filename, uint64 *token_count_out) {
@@ -208,15 +225,12 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                 }
                 next_token->length = token_len;
                 next_token->type = TT_IDENT;
-                uint64 index = hash & ((1 << 7) - 1);
-                while (KEYWORD_HASHES[index] != 0) {
-                    uint64 h = KEYWORD_HASHES[index];
-                    uint8 i = KEYWORD_TYPE[hash & ((1 << 7) - 1)];
-                    if (h == hash && KEYWORD_LEN[i] == token_len && memcmp(next_token->token, KEYWORD_LIST[i], token_len) == 0) {
-                        next_token->type = i;
-                        break;
+                TableEntry *e = hash_table_get(keywords_table, hash);
+                if (e) {
+                    const struct KeywordData *data = (struct KeywordData*)e->data;
+                    if (data->len == next_token->length && !memcmp(data->text, next_token->token, data->len)) {
+                        next_token->type = data->type;
                     }
-                    index++;
                 }
                 current = next_token->token + next_token->length;
             } break;
@@ -330,8 +344,10 @@ Token *scan(const char *filename, uint64 *token_count_out) {
         }
         next_token++;
         token_array_length++;
+        //printf("length: %llu, capacity: %llu\n", token_array_length, token_array_capacity);
         if (token_array_length == token_array_capacity) {
             extend_tokens_array(&tokens, &token_array_capacity_bytes, &token_array_capacity);
+            next_token = tokens + token_array_length;
         }
     }
 

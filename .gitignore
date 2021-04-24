@@ -12,11 +12,13 @@ Rowan.code-workspace
 Compiler/rwc.sln
 
 #Build files
-*.o
-*.obj
-*.ilk
-*.pdb
-*.exe
-*.out
+**.o
+**.obj
+**.ilk
+**.pdb
+**.exe
+**.out
 
 .vscode/
+
+Compiler/.cache

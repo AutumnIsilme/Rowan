@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
 
     //Scanner *scanner = scanner_init(file_contents, file_size);
 
+    init_keywords_table();
 
     uint64 token_count;
     Token *tokens = scan(argv[1], &token_count);
@@ -84,7 +85,7 @@ int main(int argc, char **argv) {
     
     timer_reset(&timer);
 
-    if (1) {
+    if (options.print_tokens) {
         FILE *out_file = stdout;
         if (options.output_filename != NULL) {
             out_file = fopen(options.output_filename, "wb");
