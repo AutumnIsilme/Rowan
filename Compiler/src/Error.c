@@ -40,7 +40,7 @@ void report_error(const char *reporter_filename, uint64 reporter_line, const cha
     if (msg_fmt[strlen(msg_fmt) - 1] != '\n') fprintf(stderr, "\n");
     
     index = offset - column;
-    while (file[index] != '\n') {
+    while (file[index] != '\n' && file[index] != 0) {
         fprintf(stderr, "%c", file[index]);
         index++;
     }

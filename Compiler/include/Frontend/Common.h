@@ -21,5 +21,6 @@ typedef unsigned int uint;
 #define alignof(type) ((size_t)&((struct { char c; type d; } *)0)->d)
 
 uint8 log2_64 (uint64 value);
+uint64 fnv_1(const char *data, uint64 length);
 
 #endif /* _COMMON_H */

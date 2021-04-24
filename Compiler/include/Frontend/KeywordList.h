@@ -4,16 +4,20 @@
 #include <Frontend/Common.h>
 #include <Frontend/Token.h>
 
-const char *KEYWORD_LIST[17] = {
+const uint16 KEYWORD_LIST_LEN = 19;
+
+const char *KEYWORD_LIST[KEYWORD_LIST_LEN] = {
     "if",
+    "else",
     "for",
     "while",
-    "return",
     "break",
     "continue",
+    "return",
     "switch",
     "case",
     "include",
+    "import",
     "using",
     "cast",
     "struct",
@@ -24,11 +28,9 @@ const char *KEYWORD_LIST[17] = {
     "false",
 };
 
-const uint8 KEYWORD_LEN[17] = {
+const uint8 KEYWORD_LEN[KEYWORD_LIST_LEN] = {
     2, 3, 5, 6, 5, 8, 6, 4, 7, 5, 4, 6, 4, 5, 3, 4, 5,
 };
-
-const uint16 KEYWORD_LIST_LEN = 17;
 
 const TokenType KEYWORD_TYPE[128] = {
     TT_IDENT, TT_CASE,  TT_IDENT, TT_IDENT, TT_IDENT, TT_IDENT,    TT_RETURN, TT_IDENT, TT_IDENT,  TT_IDENT,   TT_IF,    TT_IDENT,

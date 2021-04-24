@@ -74,13 +74,14 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                     if (*current == '\\') {
                         current++;
                         token_len++;
-                    } else if (*current == 0) {
+                    }
+                    if (*current == 0) {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: End Of File in character literal");
                         return tokens;
                     }
                     current++;
                 }
-                if ((token_len > 3 && next_token->token[1] != '\\') || (next_token->token[1] == '\\' && token_len > 4)) {
+                if ((token_len > 2 && next_token->token[1] != '\\') || (next_token->token[1] == '\\' && token_len > 3)) {
                     report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: More than one character in character literal");
                 }
                 next_token->length = token_len + 1;
@@ -190,23 +191,32 @@ Token *scan(const char *filename, uint64 *token_count_out) {
             case S_SAW_LETTER: {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
-                uint64 hash = next_token->token[0];
+                //uint64 hash = next_token->token[0];
+                uint64 hash = 0xcbf29ce484222325UL;
+                hash ^= next_token->token[0];
+                hash *= 0x100000001b3UL;
                 while (1) {
                     char c = *current++;
                     if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '$') {
-                        hash = ROL(hash, 2) + c;
+                        //hash = ROL(hash, 2) + c;
+                        hash ^= c;
+                        hash *= 0x100000001b3UL;
                         token_len++;
                     } else {
                         break;
                     }
                 }
                 next_token->length = token_len;
-                uint64 h = KEYWORD_HASHES[hash & ((1 << 7) - 1)];
-                uint8 i = KEYWORD_TYPE[hash & ((1 << 7) - 1)];
-                if (h == hash && KEYWORD_LEN[i] == token_len && memcmp(next_token->token, KEYWORD_LIST[i], token_len) == 0) {
-                    next_token->type = i;
-                } else {
-                    next_token->type = TT_IDENT;
+                next_token->type = TT_IDENT;
+                uint64 index = hash & ((1 << 7) - 1);
+                while (KEYWORD_HASHES[index] != 0) {
+                    uint64 h = KEYWORD_HASHES[index];
+                    uint8 i = KEYWORD_TYPE[hash & ((1 << 7) - 1)];
+                    if (h == hash && KEYWORD_LEN[i] == token_len && memcmp(next_token->token, KEYWORD_LIST[i], token_len) == 0) {
+                        next_token->type = i;
+                        break;
+                    }
+                    index++;
                 }
                 current = next_token->token + next_token->length;
             } break;
@@ -286,7 +296,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
                 next_token->length = 2;
-                next_token->type = TT_INT;
+                next_token->type = TT_ARROW;
                 current = next_token->token + next_token->length;
             } break;
             case S_SINGLE_LINE_COMMENT: {
@@ -312,7 +322,10 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                 return tokens;
             } break;
             case S_EOF: {
-
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 3;
+                next_token->type = TT_EOF;
             } break;
         }
         next_token++;
@@ -322,7 +335,8 @@ Token *scan(const char *filename, uint64 *token_count_out) {
         }
     }
 
-    munmap(source, file_size);
+    // @TODO: Probably don't leak this memory
+    //munmap(source, file_size);
 
     *token_count_out = token_array_length;
     return tokens;

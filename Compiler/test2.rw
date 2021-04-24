@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import io
-=======
-#import io
->>>>>>> 8d45f37492ab6ec1484f45df33e93d574214eef7
 /* This is a test file designed to test out the lexer! */
 
 fahrenheit_to_celsius(fahrenheit: float) -> float {
@@ -69,3 +65,4 @@ main :: () -> (int) {
     println("Converted temperature: {0}⁰{1}", result, result_type)
     caseabc := 1.4
 }
+"\""

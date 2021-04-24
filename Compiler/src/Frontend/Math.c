@@ -24,3 +24,12 @@ uint8 log2_64(uint64 value)
     value |= value >> 32;
     return tab64[((uint64)((value - (value >> 1))*0x07EDD5E59A4E28C2)) >> 58];
 }
+
+uint64 fnv_1(const char *data, uint64 length) {
+    uint64 hash = 0xcbf29ce484222325UL;
+    for (uint64 i = 0; i < length; i++) {
+        hash ^= data[i];
+        hash *= 0x100000001b3UL;
+    }
+    return hash;
+}
