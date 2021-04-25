@@ -32,6 +32,28 @@ struct KeywordData KEYWORD_LIST[KEYWORD_LIST_LEN] = {
     {"soa", 3, TT_SOA},
     {"true", 4, TT_TRUE},
     {"false", 5, TT_FALSE},
+
+    /*{"int8", 4, TT_TYPE},
+    {"int16", 5, TT_TYPE},
+    {"int32", 5, TT_TYPE},
+    {"int64", 5, TT_TYPE},
+    {"int128", 6, TT_TYPE},
+
+    {"uint8", 5, TT_TYPE},
+    {"uint16", 6, TT_TYPE},
+    {"uint32", 6, TT_TYPE},
+    {"uint64", 6, TT_TYPE},
+    {"uint128", 7, TT_TYPE},
+
+    {"float32", 7, TT_TYPE},
+    {"float64", 7, TT_TYPE},
+    {"float128", 8, TT_TYPE},
+    
+    {"bool", 4, TT_TYPE},
+    {"string", 6, TT_TYPE},
+    {"char8", 5, TT_TYPE},
+    {"char16", 6, TT_TYPE},
+    {"char32", 6, TT_TYPE},*/
 };
 
 const uint8 KEYWORD_LEN[KEYWORD_LIST_LEN] = {

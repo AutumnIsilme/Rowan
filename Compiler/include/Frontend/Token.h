@@ -26,8 +26,6 @@ typedef enum __attribute__((__packed__)) _TokenType {
     TT_TRUE,
     TT_FALSE,
 
-    TT_TYPE,
-
     /* Operators and symbols*/
     TT_LPAREN,
     TT_RPAREN,
@@ -87,9 +85,9 @@ typedef enum __attribute__((__packed__)) _TokenType {
     TT_DOT,          /* . */
 
     TT_COLON_EQUAL, /* := */
-    /* TT_COLON_COLON,  // Unused? */
-    TT_COLON,        /* : */
-    TT_SEMICOLON,    /* ; */
+    TT_COLON_COLON, /* :: */
+    TT_COLON,       /* : */
+    TT_SEMICOLON,   /* ; */
 
     TT_TILDE,     /* ~ */
     TT_HASH,      /* # */
@@ -122,12 +120,6 @@ typedef struct Token {
     uint64 length;
 } Token;
 
-//Token *token_create(TokenType type, uint32 line_number, uint32 column_number, const char *token, uint64 length);
-
-/*
-Token(TokenType type, uint32 line_number, uint32 column_number, const char* token, uint32 length)
-   : type(type), line_number(line_number), column_number(column_number), token(token), length(length) {}*/
-
 static const char* token_type_names[TT_NONE + 1] = {
     "TT_IF",
     "TT_ELSE",
@@ -149,8 +141,6 @@ static const char* token_type_names[TT_NONE + 1] = {
 
     "TT_TRUE",
     "TT_FALSE",
-    
-    "TT_TYPE",
 
     "TT_LPAREN",
     "TT_RPAREN",
@@ -209,7 +199,7 @@ static const char* token_type_names[TT_NONE + 1] = {
     "TT_DOT",
 
     "TT_COLON_EQUALS",
-    //"TT_COLON_COLON",
+    "TT_COLON_COLON",
     "TT_COLON",
     "TT_SEMICOLON",
 

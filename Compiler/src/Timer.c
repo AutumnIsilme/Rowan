@@ -17,7 +17,7 @@ void timer_reset(Timer *timer){
 double timer_elapsed(Timer *timer) {
 	struct timespec curr;
 	timespec_get(&curr, TIME_UTC);
-    printf("%ld, %ld", curr.tv_sec, curr.tv_nsec);
+    //printf("%ld, %ld", curr.tv_sec, curr.tv_nsec);
 	return (-(1000000000.0 * (double) timer->beg_.tv_sec + (double) timer->beg_.tv_nsec) + 
 		(1000000000.0 * (double) curr.tv_sec + (double) curr.tv_nsec)) / 1000000000.0;
 }

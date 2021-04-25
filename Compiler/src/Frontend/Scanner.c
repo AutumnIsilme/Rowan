@@ -1,4 +1,5 @@
 #include "Frontend/HashTable.h"
+#include "Frontend/Token.h"
 #include <Frontend/Scanner.h>
 #include <Frontend/StateMachine.h>
 #include <Frontend/KeywordList.h>
@@ -55,6 +56,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
     }
     size_t file_size = s.st_size;
 
+
     char *source = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
     if (source == NULL) {
         exit(1);
@@ -63,10 +65,10 @@ Token *scan(const char *filename, uint64 *token_count_out) {
 
     char *current = source;
     char *end = source + file_size;
-    while (current <= end) {
+    while (current < end) {
         int state = START;
         uint64 token_len = 0;
-        //printf("Starting token %llu, %.5s\n", token_array_length, current);
+        //printf("Starting token %llu, %s\n", token_array_length, current);
         do {
             int ch = *current++;
             int equiv_class = equivalence_class[ch];
@@ -120,7 +122,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                     current++;
                 }
                 next_token->length = token_len + 1;
-                next_token->type = TT_CHAR;
+                next_token->type = TT_STRING;
                 current = next_token->token + next_token->length;
             } break;
             case S_SINGLE_OP: {
@@ -131,6 +133,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                     case '.': next_token->type = TT_DOT;        break;
                     case '~': next_token->type = TT_TILDE;      break;
                     case '#': next_token->type = TT_HASH;       break;
+                    case '$': next_token->type = TT_DOLLAR;     break;
                     case ',': next_token->type = TT_COMMA;      break;
                     case '?': next_token->type = TT_QUESTION;   break;
                     case '@': next_token->type = TT_AT;         break;
@@ -155,8 +158,8 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                     case '%': next_token->type = TT_PERCENT;    break;
                     case ':': next_token->type = TT_COLON;      break;
                     default: {
-                        report_error(__FILE__, __LINE__, filename, source, next_token->offset, 2, "Scanner: Encountered unrecognised character for S_SINGLE_OP: %c", *next_token->token);
-                        //printf("%s %s: Error - Encountered unrecognised character for S_SINGLE_OP: %c", __FILE__, __LINE__, *next_token->token);
+                        report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: Encountered unrecognised character for S_SINGLE_OP: %c", *next_token->token);
+                        //printf("%s %d: Error - Encountered unrecognised character for S_SINGLE_OP: %d\n", __FILE__, __LINE__, *next_token->token);
                     }
                 }
                 current = next_token->token + next_token->length;
@@ -173,6 +176,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                     case '&': next_token->type = TT_AMPERSAND_AMPERSAND; break;
                     case '|': next_token->type = TT_PIPE_PIPE;           break;
                     case '=': next_token->type = TT_EQUAL_EQUAL;         break;
+                    case ':': next_token->type = TT_COLON_COLON;         break;
                     default: {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 2, "Scanner: Encountered unrecognised character for S_DOUBLED_OP: %c", *next_token->token);
                         //printf("%s %s: Error - Encountered unrecognised character for S_DOUBLED_OP: %c", __FILE__, __LINE__, *next_token->token);
@@ -238,16 +242,30 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
                 bool is_float = false;
-                if (*(current - 1) == '.') is_float = true;
-                while (1) {
-                    char c = *current++;
-                    if (('0' <= c && c <= '9') || c == '_') {
-                        token_len++;
-                    } else if (c == '.') {
-                        is_float = true;
-                        token_len++;
-                    } else {
-                        break;
+                if (*(current - 1) == '.') {
+                    while (1) {
+                        char c = *current++;
+                        if (('0' <= c && c <= '9') || c == '_') {
+                            token_len++;
+                        } else if (c == '.') {
+                            is_float = true;
+                            token_len++;
+                        } else {
+                            break;
+                        }
+                    }
+                    is_float = true;
+                } else {
+                    while (1) {
+                        char c = *current++;
+                        if (('0' <= c && c <= '9') || c == '_') {
+                            token_len++;
+                        } else if (c == '.') {
+                            is_float = true;
+                            token_len++;
+                        } else {
+                            break;
+                        }
                     }
                 }
                 next_token->length = token_len;
@@ -291,7 +309,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                             }
                         }
                         next_token->type = TT_HEX_LITERAL;
-                    }
+                    } break;
                     default: {
                         next_token->type = TT_NONE;
                     }
@@ -314,12 +332,15 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                 current = next_token->token + next_token->length;
             } break;
             case S_SINGLE_LINE_COMMENT: {
-                while (*current != '\n') current++;
+                while (current < end && *current != '\n') current++;
                 next_token--;
                 token_array_length--;
             } break;
             case S_MULTI_LINE_COMMENT: {
-                while (*current != '*' && *(current + 1) != '/') current++;
+                while (current < (end - 1) && !(*current == '*' && *(current + 1) == '/')) current++;
+                if (current >= end - 1) {
+                    report_error(__FILE__, __LINE__, filename, source, current - source, 1, "Scanner: EOF in multi-line comment");
+                }
                 current += 2;
                 next_token--;
                 token_array_length--;
@@ -336,10 +357,6 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                 return tokens;
             } break;
             case S_EOF: {
-                next_token->offset = current - token_len - source;
-                next_token->token = current - token_len;
-                next_token->length = 3;
-                next_token->type = TT_EOF;
             } break;
         }
         next_token++;
@@ -350,6 +367,12 @@ Token *scan(const char *filename, uint64 *token_count_out) {
             next_token = tokens + token_array_length;
         }
     }
+
+    next_token->offset = file_size;
+    next_token->token = end;
+    next_token->length = 0;
+    next_token->type = TT_EOF;
+    token_array_length++;
 
     // @TODO: Probably don't leak this memory
     //munmap(source, file_size);

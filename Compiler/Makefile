@@ -2,7 +2,7 @@ CXX = clang++
 CC = gcc
 
 CXXFLAGS := -std=c++1z
-CFLAGS := -std=c11 -Iinclude -Wall -Wextra -Wpedantic -Wno-newline-eof
+CFLAGS := -std=c11 -Iinclude -Wall -Wextra -Wpedantic
 LDFLAGS := 
 
 OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Frontend/HashTable.o src/Error.o src/Timer.o

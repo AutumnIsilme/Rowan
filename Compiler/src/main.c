@@ -81,12 +81,12 @@ int main(int argc, char **argv) {
     uint64 token_count;
     Token *tokens = scan(argv[1], &token_count);
 
-    fprintf(stdout, "Scan: %f\n", timer_elapsed(&timer));
+    fprintf(stderr, "Scan: %f\n", timer_elapsed(&timer));
     
     timer_reset(&timer);
 
     if (options.print_tokens) {
-        FILE *out_file = stdout;
+        FILE *out_file = stderr;
         if (options.output_filename != NULL) {
             out_file = fopen(options.output_filename, "wb");
             if (out_file == NULL) {
@@ -104,8 +104,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    fprintf(stdout, "Output tokens: %f\n", timer_elapsed(&timer));
-    fprintf(stdout, "Token count: %llu\n", token_count);
-    fprintf(stdout, "Time: %12f\n", timer_elapsed(&timer2));
+    fprintf(stderr, "Output tokens: %f\n", timer_elapsed(&timer));
+    fprintf(stderr, "Token count: %llu\n", token_count);
+    fprintf(stderr, "Time: %12f\n", timer_elapsed(&timer2));
     return 0;
 }
