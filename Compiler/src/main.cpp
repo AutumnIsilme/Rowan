@@ -2,22 +2,22 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <Frontend/Scanner.h>
+#include <Frontend/Scanner.hh>
 #include <Timer.h>
-#include <Instrumentor.h>
+#include <Instrumentor.hh>
 
-typedef struct _Options {
+struct Options {
     bool print_tokens;
     const char *filename;
     const char *output_filename;
-} Options;
+};
 
 void print_help(const char *exec) {
     printf("Usage: %s [filename]\n", exec);
 }
 
 int parse_args(int argc, char **argv, Options *options) {
-    Options result = {0};
+    Options result = {0, 0, 0};
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "--print-tokens") == 0) {
             result.print_tokens = true;
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    Options options = {0};
+    Options options = {0, 0, 0};
     if (parse_args(argc, argv, &options)) {
         return 0;
     }
@@ -57,7 +57,6 @@ int main(int argc, char **argv) {
 
     init_keywords_table();
 
-    uint64 token_count;
     TokenView token_view = scan(argv[1]);
 
     fprintf(stderr, "Scan: %f\n", timer_elapsed(&timer));

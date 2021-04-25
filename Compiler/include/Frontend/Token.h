@@ -1,7 +1,7 @@
 #ifndef TOKEN_H_GUARD
 #define TOKEN_H_GUARD
 
-#include <Frontend/Common.h>
+#include <Common.h>
 
 typedef enum __attribute__((__packed__)) _TokenType {
     /* Keywords */
@@ -111,14 +111,6 @@ typedef enum __attribute__((__packed__)) _TokenType {
 
     TT_NONE
 } TokenType;
-
-typedef struct Token {
-    TokenType type;
-    uint32 _unused;
-    uint64 offset;
-    char* token;
-    uint64 length;
-} Token;
 
 static const char* token_type_names[TT_NONE + 1] = {
     "TT_IF",

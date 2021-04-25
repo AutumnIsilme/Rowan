@@ -1,7 +1,7 @@
 CXX = clang++
 CC = gcc
 
-CXXFLAGS := -std=c++1z
+CXXFLAGS := -std=c++20
 CFLAGS := -std=c11 -Iinclude -Wall -Wextra -Wpedantic
 LDFLAGS := 
 

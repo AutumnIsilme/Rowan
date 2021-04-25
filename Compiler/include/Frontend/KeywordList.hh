@@ -1,7 +1,7 @@
 #ifndef KEYWORD_LIST_H_GUARD
 #define KEYWORD_LIST_H_GUARD
 
-#include <Frontend/Common.h>
+#include <Common.h>
 #include <Frontend/Token.h>
 
 #define KEYWORD_LIST_LEN 19
@@ -12,7 +12,7 @@ struct KeywordData {
     TokenType type;
 };
 
-struct KeywordData KEYWORD_LIST[KEYWORD_LIST_LEN] = {
+KeywordData KEYWORD_LIST[KEYWORD_LIST_LEN] = {
     {"if", 2, TT_IF},
     {"else", 4, TT_ELSE},
     {"for", 3, TT_FOR},

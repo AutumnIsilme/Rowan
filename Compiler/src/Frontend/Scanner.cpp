@@ -1,10 +1,10 @@
-#include "Frontend/HashTable.h"
-#include "Frontend/Token.h"
-#include <Frontend/Scanner.h>
+#include <Frontend/HashTable.hh>
+#include <Frontend/Token.h>
+#include <Frontend/Scanner.hh>
 #include <Frontend/StateMachine.h>
-#include <Frontend/KeywordList.h>
+#include <Frontend/KeywordList.hh>
 #include <Error.h>
-#include <Instrumentor.h>
+#include <Instrumentor.hh>
 
 #include <stdio.h>
 #include <stddef.h>

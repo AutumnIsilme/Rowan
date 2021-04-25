@@ -3,8 +3,16 @@
 
 #include <stdbool.h>
 
-#include <Frontend/Common.h>
+#include <Common.h>
 #include <Frontend/Token.h>
+
+struct Token {
+    TokenType type;
+    uint32 _unused;
+    uint64 offset;
+    char* token;
+    uint64 length;
+};
 
 struct TokenView {
     Token *tokens;

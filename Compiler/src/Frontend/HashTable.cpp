@@ -1,4 +1,4 @@
-#include <Frontend/HashTable.h>
+#include <Frontend/HashTable.hh>
 
 #include <stdlib.h>
 #include <string.h>

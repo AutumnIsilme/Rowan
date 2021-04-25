@@ -1,11 +1,11 @@
 #ifndef PARSER_H_GUARD
 #define PARSER_H_GUARD
 
-#include <Frontend/Scanner.h>
+#include <Frontend/Scanner.hh>
 
-typedef struct _Parser {
+struct Parser {
 
-} Parser;
+};
 
 Parser *parser_create(TokenView *tokens);
 

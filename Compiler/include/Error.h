@@ -1,7 +1,7 @@
 #ifndef ERROR_H_GUARD
 #define ERROR_H_GUARD
 
-#include "Frontend/Common.h"
+#include "Common.h"
 
 struct Error {
     uint32 error_code;
