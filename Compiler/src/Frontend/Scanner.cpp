@@ -4,6 +4,7 @@
 #include <Frontend/StateMachine.h>
 #include <Frontend/KeywordList.h>
 #include <Error.h>
+#include <Instrumentor.h>
 
 #include <stdio.h>
 #include <stddef.h>
@@ -19,12 +20,13 @@ static HashTable *keywords_table;
 
 void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uint64 *token_array_capacity) {
     *token_array_capacity_bytes += *token_array_capacity_bytes;
-    *tokens = realloc(*tokens, *token_array_capacity_bytes);
+    *tokens = (Token*)realloc(*tokens, *token_array_capacity_bytes);
     if (*tokens == NULL) exit(1);
     *token_array_capacity += *token_array_capacity;
 }
 
 void init_keywords_table() {
+    PROFILE_FUNC();
     keywords_table = hash_table_create(7);
     for (uint i = 0; i < KEYWORD_LIST_LEN; i++) {
         if (hash_table_add(keywords_table, (TableEntry){
@@ -38,34 +40,56 @@ void init_keywords_table() {
     }
 }
 
-Token *scan(const char *filename, uint64 *token_count_out) {
+Token TokenView::peek_next_token() {
+    
+}
+
+Token TokenView::peek_token(int lookahead) {
+
+}
+
+void TokenView::eat_token() {
+
+}
+
+TokenView scan(const char *filename) {
+    PROFILE_FUNC();
     uint64 token_array_capacity_bytes = 4096;
     uint64 token_array_capacity = 128;
     uint64 token_array_length = 0;
-    Token *tokens = malloc(token_array_capacity_bytes);
+    Token *tokens = (Token*)malloc(token_array_capacity_bytes);
     if (tokens == NULL) {
         exit(1);
     }
     Token *next_token = tokens;
 
-    int file = open(filename, O_RDONLY);
-    struct stat s;
-    int status = fstat(file, &s);
-    if (status == -1) {
-        exit(1); // show errno
-    }
-    size_t file_size = s.st_size;
+    char *source;
+    size_t file_size;
 
+    {
+        PROFILE_SCOPE("Scanner::read_file");
+        int file = open(filename, O_RDONLY);
+        struct stat s;
+        int status = fstat(file, &s);
+        if (status == -1) {
+            exit(1); // show errno
+        }
+        file_size = s.st_size;
 
-    char *source = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
-    if (source == NULL) {
-        exit(1);
+        source = (char*)mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
+        if (source == NULL) {
+            exit(1);
+        }
+        if (madvise(source, file_size, MADV_SEQUENTIAL | MADV_WILLNEED)) {
+            exit(1);
+        }
+        close(file);
     }
-    close(file);
 
     char *current = source;
     char *end = source + file_size;
     while (current < end) {
+        PROFILE_SCOPE("Scanner::token_loop");
         int state = START;
         uint64 token_len = 0;
         //printf("Starting token %llu, %s\n", token_array_length, current);
@@ -82,7 +106,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
                 next_token->length = 1 + (*(current - token_len) == '\r');
-                next_token->type = TT_SEMICOLON + (TT_NEWLINE - TT_SEMICOLON) * (*(current - token_len) < ';');
+                next_token->type = (TokenType)(TT_SEMICOLON + (TT_NEWLINE - TT_SEMICOLON) * (*(current - token_len) < ';'));
                 current = next_token->token + next_token->length;
             } break;
             case S_CHAR: {
@@ -96,7 +120,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                     }
                     if (*current == 0) {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: End Of File in character literal");
-                        return tokens;
+                        return TokenView(tokens, 0, token_array_length);
                     }
                     current++;
                 }
@@ -117,7 +141,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
                         token_len++;
                     } else if (*current == 0) {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: End Of File in string literal");
-                        return tokens;
+                        return TokenView(tokens, 0, token_array_length);
                     }
                     current++;
                 }
@@ -354,7 +378,7 @@ Token *scan(const char *filename, uint64 *token_count_out) {
             } break;
             case S_ERROR: {
                 report_error(__FILE__, __LINE__, filename, source, current - source, 1, "Scanner: Encountered unexpected character (%d)", *current);
-                return tokens;
+                return TokenView(tokens, 0, token_array_length);
             } break;
             case S_EOF: {
             } break;
@@ -377,6 +401,5 @@ Token *scan(const char *filename, uint64 *token_count_out) {
     // @TODO: Probably don't leak this memory
     //munmap(source, file_size);
 
-    *token_count_out = token_array_length;
-    return tokens;
+    return TokenView(tokens, 0, token_array_length);
 }

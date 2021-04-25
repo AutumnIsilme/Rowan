@@ -4,6 +4,7 @@
 
 #include <Frontend/Scanner.h>
 #include <Timer.h>
+#include <Instrumentor.h>
 
 typedef struct _Options {
     bool print_tokens;
@@ -38,6 +39,9 @@ int parse_args(int argc, char **argv, Options *options) {
 }
 
 int main(int argc, char **argv) {
+    PROFILE_BEGIN_SESSION("Run", "rowan-run.json");
+	PROFILE_FUNC();
+
     if (argc == 1) {
         print_help(argv[0]);
         return 0;
@@ -51,41 +55,17 @@ int main(int argc, char **argv) {
     Timer timer2 = timer_create();
     Timer timer = timer_create();
 
-    /*FILE* file = fopen("test2.rw", "rb");
-    if (file == NULL) {
-        printf("Failed to open file!\n");
-        return -1;
-    }
-
-    fseek(file, 0L, SEEK_END);
-    size_t file_size = ftell(file);
-    rewind(file);*/
-
-    /*FILE* file = fopen("test2.rw", "rb");
-    if (file == NULL) {
-        printf("Failed to open file!\n");
-        return -1;
-    }*/
-
-    /*printf("Bytes read: %#lx\n", bytes_read);
-
-    fclose(file);
-
-    printf("Read file: %f\n", timer_elapsed(&timer));
-    timer_reset(&timer);*/
-
-    //Scanner *scanner = scanner_init(file_contents, file_size);
-
     init_keywords_table();
 
     uint64 token_count;
-    Token *tokens = scan(argv[1], &token_count);
+    TokenView token_view = scan(argv[1]);
 
     fprintf(stderr, "Scan: %f\n", timer_elapsed(&timer));
     
     timer_reset(&timer);
 
     if (options.print_tokens) {
+        PROFILE_SCOPE("main::output_tokens");
         FILE *out_file = stderr;
         if (options.output_filename != NULL) {
             out_file = fopen(options.output_filename, "wb");
@@ -95,7 +75,8 @@ int main(int argc, char **argv) {
             }
         }
         
-        for (uint64 i = 0; i < token_count; i++) {
+        Token *tokens = token_view.tokens;
+        for (uint64 i = token_view.start; i < token_view.start + token_view.count; i++) {
             fprintf(out_file, "[%s: %.*s]\n", token_type_names[(uint16)tokens[i].type], (int)tokens[i].length, tokens[i].token);
         }
 
@@ -105,7 +86,9 @@ int main(int argc, char **argv) {
     }
 
     fprintf(stderr, "Output tokens: %f\n", timer_elapsed(&timer));
-    fprintf(stderr, "Token count: %llu\n", token_count);
+    fprintf(stderr, "Token count: %llu\n", token_view.count);
     fprintf(stderr, "Time: %12f\n", timer_elapsed(&timer2));
+
+    PROFILE_END_SESSION();
     return 0;
 }

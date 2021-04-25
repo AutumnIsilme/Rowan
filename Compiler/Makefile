@@ -8,7 +8,7 @@ LDFLAGS :=
 OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Frontend/HashTable.o src/Error.o src/Timer.o
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -19,11 +19,14 @@ all: build
 
 build: $(OBJS)
 	mkdir -p build
-	$(CC) $(LDFLAGS) $(OBJS) -o build/rwc.out
+	$(CXX) $(LDFLAGS) $(OBJS) -o build/rwc.out
 
-release: CFLAGS += -O3 -D FASTBUILD
-release: CXXFLAGS += -O3
+release: CFLAGS += -O3
+release: CXXFLAGS += -D NDEBUG
 release: build
+
+dist: CXXFLAGS += -D NO_TIMERS
+dist: release
 
 debug: build
 

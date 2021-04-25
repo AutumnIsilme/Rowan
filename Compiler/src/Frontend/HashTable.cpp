@@ -6,8 +6,8 @@
 HashTable *hash_table_create(uint8 initial_capacity_power) {
     const uint64 initial_capacity = 2 << initial_capacity_power;
     //const uint64 item_size = alignof(struct{uint8 a[item_base_size + 1 + sizeof(uint64)]});
-    HashTable *table = malloc(sizeof(HashTable));
-    table->entries = malloc(sizeof(TableEntry) * (initial_capacity + initial_capacity_power));
+    HashTable *table = (HashTable*)malloc(sizeof(HashTable));
+    table->entries = (TableEntry*)malloc(sizeof(TableEntry) * (initial_capacity + initial_capacity_power));
     table->capacity = initial_capacity;
     table->probe_limit = initial_capacity_power;
     table->entry_count = 0;
@@ -85,7 +85,7 @@ TableEntry *hash_table_get(HashTable *table, uint64 hash) {
 }
 
 void hash_table_realloc(HashTable *table) {
-    TableEntry *new_entries = malloc(sizeof(TableEntry) * ((table->capacity << 1) + table->probe_limit + 1));
+    TableEntry *new_entries = (TableEntry*)malloc(sizeof(TableEntry) * ((table->capacity << 1) + table->probe_limit + 1));
     table->capacity <<= 1;
     table->probe_limit++;
     TableEntry *old_entries = table->entries;

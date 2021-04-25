@@ -170,6 +170,8 @@ func foo (string: const char^, length: u32) -> int {
 
 foo("Yes", 3)
 
+("Yes", 3)foo
+
 [foo string:"Yes", length:3]
 
 [foo: "Yes", 3]
@@ -244,7 +246,7 @@ for i in range(128) {
 
 }
 
-for (i := 0..128) { //Iterator, implicit next? Or just increment?
+for (i := 0..128) { //Iterator, implicit next? Or just increment (syntactic sugar)?
 
 }
 

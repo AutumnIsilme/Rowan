@@ -14,8 +14,11 @@ main(int argc, char** argv) -> int {
     }
 
     for {
-        range := 5; i := get_min_from_range_for_this_thing(5); i0 := i }, {
-        i < range
+        range := 5;
+        i := get_min_from_range_for_this_thing(5);
+        i0 := i;
+    }, {
+        yield i < range;
     }, {
         if i < 4 {
             i, i0 = fibonnaci(i, i0)
