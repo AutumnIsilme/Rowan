@@ -2,6 +2,7 @@
 #define _SCANNER_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <Common.h>
 #include <Frontend/Token.h>
@@ -34,9 +35,25 @@ struct Scanner {
     //    : tokens(tokens), start(start_index), current(start_index), count(end_index - start_index), end(end_index) {}
     Scanner(const char *filename);
 
-    inline Token& peek_next_token();
-    inline Token& peek_token(int lookahead);
-    inline void eat_token();
+    inline Token* peek_next_token() {
+        if (current < end)
+            return &tokens[current];
+        else
+            // This should be an EOF token
+            return &tokens[end];
+    }
+
+    inline Token* peek_token(int lookahead) {
+        if (current + lookahead > start && current + lookahead < end)
+            return &tokens[current + lookahead];
+        else
+            // This should be an EOF token
+            return &tokens[end];
+    }
+
+    inline void eat_token() {
+        current++;
+    }
 };
 
 void init_keywords_table();

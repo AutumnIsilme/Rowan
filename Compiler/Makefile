@@ -1,12 +1,12 @@
-CXX = clang++
+CXX = g++
 CC = gcc
 
 CXXFLAGS := -std=c++2a -flto
 CFLAGS := -Iinclude -Wall -Wextra -Wpedantic -Wno-c99-extensions
 LDFLAGS := 
 
-OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Error.o src/Timer.o
-FILES := src/main.cpp src/Frontend/Scanner.cpp src/Frontend/Math.cpp src/Error.cpp src/Timer.cpp
+OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Error.o src/Timer.o src/Frontend/Parser.o
+FILES := src/main.cpp src/Frontend/Scanner.cpp src/Frontend/Math.cpp src/Error.cpp src/Timer.cpp src/Frontend/Parser.cpp
 
 %.o: %.cpp
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $< -o $@

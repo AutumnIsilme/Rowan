@@ -40,26 +40,6 @@ void init_keywords_table() {
     }
 }
 
-inline Token& Scanner::peek_next_token() {
-    if (current < end)
-        return tokens[current];
-    else
-        // This should be an EOF token
-        return tokens[end];
-}
-
-inline Token& Scanner::peek_token(int lookahead) {
-    if (current + lookahead > start && current + lookahead < end)
-        return tokens[current + lookahead];
-    else
-        // This should be an EOF token
-        return tokens[end];
-}
-
-inline void Scanner::eat_token() {
-    current++;
-}
-
 Scanner::Scanner(const char *filename) {
     PROFILE_FUNC();
     start = 0;
@@ -95,6 +75,11 @@ Scanner::Scanner(const char *filename) {
         }
         close(file);
     }
+
+    // NOTE: This memory probably sticks around for the rest of the
+    // program, because we need to be able to report errors and
+    // see the text of tokens sometimes.
+    file_data = source;
 
     char *current = source;
     char *end = source + file_size;
@@ -257,6 +242,12 @@ Scanner::Scanner(const char *filename) {
                 }
                 next_token->length = token_len;
                 next_token->kind = TT_IDENT;
+                /*
+                @OPTIMISATION:
+                We shouldn't be looking up the ident hash here, as we need to compare strings if we do that, and
+                that is slow. Instead this should probably be deferred to parsing, or keywords expanded into the
+                main state machine.
+                */
                 TableEntry<KeywordData> *e = keywords_table->get(hash);
                 if (e) {
                     const struct KeywordData *data = e->data;
@@ -413,13 +404,6 @@ Scanner::Scanner(const char *filename) {
     next_token->length = 0;
     next_token->kind = TT_EOF;
     token_array_length++;
-
-    // : Probably don't leak this memory
-    // NOTE: This memory probably sticks around for the rest of the
-    // program actually, because we need to be able to report errors and
-    // see the text of tokens sometimes.
-    //munmap(source, file_size);
-    file_data = source;
 
     return;
 }

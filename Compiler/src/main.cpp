@@ -92,7 +92,8 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Time: %12f\n", timer_elapsed(&timer2));
 
     auto parser = Parser(&token_view);
-    report_error(__FILE__, __LINE__, "aaa", token_view.file_data, parser.temp_toplevel->ident.offset, parser.temp_toplevel->ident.length, "Parser: Temp_toplevel error help info thingy");
+    fprintf(stderr, "Parser complete.\n");
+    report_error(__FILE__, __LINE__, "aaa", token_view.file_data, parser.temp_toplevel->value.token->offset, parser.temp_toplevel->value.token->length, "Parser: Temp_toplevel error help info thingy");
 
     PROFILE_END_SESSION();
     return 0;
