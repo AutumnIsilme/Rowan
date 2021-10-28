@@ -4,26 +4,38 @@
 #include <Common.h>
 #include <Frontend/Token.h>
 
+#include <stdlib.h>
+
+template<typename T>
 struct TableEntry {
     uint64 hash;
-    void *data;
+    T *data;
     uint8 present;
     uint8 probe_count;
 };
 
+template<typename T>
 struct HashTable {
     uint64 capacity;
     uint64 entry_count;
     uint8 probe_limit;
 
-    TableEntry *entries;
+    TableEntry<T> *entries;
+
+    HashTable(uint8 initial_capacity_power);
+
+    ~HashTable();
+
+    int add(TableEntry<T> entry);
+
+    int remove(uint64 hash);
+
+    TableEntry<T> *get(uint64 hash);
+
+    void realloc();
+
 };
 
-HashTable *hash_table_create(uint8 initial_capacity_power);
-void hash_table_destroy(HashTable *table);
-int hash_table_add(HashTable *table, TableEntry entry);
-int hash_table_remove(HashTable *table, uint64 hash);
-TableEntry *hash_table_get(HashTable *table, uint64 hash);
-void hash_table_realloc(HashTable *table);
+#include <Frontend/HashTable.cpp>
 
 #endif /* _SYMBOL_TABLE_H */

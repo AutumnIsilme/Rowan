@@ -3,6 +3,8 @@
 #include <stdlib.h>
 
 #include <Frontend/Scanner.hh>
+#include <Frontend/Parser.hh>
+#include <Error.h>
 #include <Timer.h>
 #include <Instrumentor.hh>
 
@@ -17,6 +19,7 @@ void print_help(const char *exec) {
 }
 
 int parse_args(int argc, char **argv, Options *options) {
+    PROFILE_FUNC();
     Options result = {0, 0, 0};
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "--print-tokens") == 0) {
@@ -40,7 +43,7 @@ int parse_args(int argc, char **argv, Options *options) {
 
 int main(int argc, char **argv) {
     PROFILE_BEGIN_SESSION("Run", "rowan-run.json");
-	PROFILE_FUNC();
+	//PROFILE_FUNC();
 
     if (argc == 1) {
         print_help(argv[0]);
@@ -57,7 +60,7 @@ int main(int argc, char **argv) {
 
     init_keywords_table();
 
-    TokenView token_view = scan(argv[1]);
+    Scanner token_view = Scanner(argv[1]);
 
     fprintf(stderr, "Scan: %f\n", timer_elapsed(&timer));
     
@@ -76,7 +79,7 @@ int main(int argc, char **argv) {
         
         Token *tokens = token_view.tokens;
         for (uint64 i = token_view.start; i < token_view.start + token_view.count; i++) {
-            fprintf(out_file, "[%s: %.*s]\n", token_type_names[(uint16)tokens[i].type], (int)tokens[i].length, tokens[i].token);
+            fprintf(out_file, "[%s: %.*s]\n", token_type_names[(uint16)tokens[i].kind], (int)tokens[i].length, tokens[i].token);
         }
 
         if (options.output_filename != NULL) {
@@ -87,6 +90,9 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Output tokens: %f\n", timer_elapsed(&timer));
     fprintf(stderr, "Token count: %llu\n", token_view.count);
     fprintf(stderr, "Time: %12f\n", timer_elapsed(&timer2));
+
+    auto parser = Parser(&token_view);
+    report_error(__FILE__, __LINE__, "aaa", token_view.file_data, parser.temp_toplevel->ident.offset, parser.temp_toplevel->ident.length, "Parser: Temp_toplevel error help info thingy");
 
     PROFILE_END_SESSION();
     return 0;

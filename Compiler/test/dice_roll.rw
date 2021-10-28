@@ -1,0 +1,39 @@
+import io
+import rand
+
+my_func :: (a: int, b: int) -> int {
+    my_a = a
+    io.info("{}\n", my_a)
+}
+
+is_positive_response :: (response: string) -> bool {
+    for i := 0, i < response.length, i++ {
+        response[i] |= 0b100000
+    }
+    if response == "YES" || response == "Y" {
+        return true
+    }
+    return false
+}
+
+main :: () -> () {
+    continue := true
+    while continue {
+        dice := 7
+        attempts := 0
+        while dice != 6 {
+            dice = rand.get_int(1, 6)
+            io.info("{}", dice)
+            attempts++
+        }
+        io.info("That took {} attempts\n", attempts)
+        io.info("Do you want to rerun? ")
+        continue = is_positive_response(io.readline(io.stdin))
+    }
+
+    if true {
+        io.info("IF line test")
+    } else if false {
+        io.info("This should not OUTPUT")
+    }
+}

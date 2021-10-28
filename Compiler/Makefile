@@ -1,11 +1,12 @@
 CXX = clang++
 CC = gcc
 
-CXXFLAGS := -std=c++20
-CFLAGS := -std=c11 -Iinclude -Wall -Wextra -Wpedantic
+CXXFLAGS := -std=c++2a -flto
+CFLAGS := -Iinclude -Wall -Wextra -Wpedantic -Wno-c99-extensions
 LDFLAGS := 
 
-OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Frontend/HashTable.o src/Error.o src/Timer.o
+OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Error.o src/Timer.o
+FILES := src/main.cpp src/Frontend/Scanner.cpp src/Frontend/Math.cpp src/Error.cpp src/Timer.cpp
 
 %.o: %.cpp
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
@@ -17,9 +18,9 @@ OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Frontend/HashT
 
 all: build
 
-build: $(OBJS)
+build:
 	mkdir -p build
-	$(CXX) $(LDFLAGS) $(OBJS) -o build/rwc.out
+	$(CXX) $(LDFLAGS) $(CXXFLAGS) $(CFLAGS) $(FILES) -o build/rwc.out
 
 release: CFLAGS += -O3
 release: CXXFLAGS += -D NDEBUG

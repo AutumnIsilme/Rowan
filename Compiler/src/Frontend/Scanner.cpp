@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-static HashTable *keywords_table;
+static HashTable<KeywordData> *keywords_table;
 
 void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uint64 *token_array_capacity) {
     *token_array_capacity_bytes += *token_array_capacity_bytes;
@@ -27,9 +27,9 @@ void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uin
 
 void init_keywords_table() {
     PROFILE_FUNC();
-    keywords_table = hash_table_create(7);
+    keywords_table = new HashTable<KeywordData>(7);
     for (uint i = 0; i < KEYWORD_LIST_LEN; i++) {
-        if (hash_table_add(keywords_table, (TableEntry){
+        if (keywords_table->add((TableEntry<KeywordData>){
             .hash=fnv_1(KEYWORD_LIST[i].text, KEYWORD_LIST[i].len),
             .data=&KEYWORD_LIST[i],
             .present=true,
@@ -40,31 +40,41 @@ void init_keywords_table() {
     }
 }
 
-Token TokenView::peek_next_token() {
-    
+inline Token& Scanner::peek_next_token() {
+    if (current < end)
+        return tokens[current];
+    else
+        // This should be an EOF token
+        return tokens[end];
 }
 
-Token TokenView::peek_token(int lookahead) {
-
+inline Token& Scanner::peek_token(int lookahead) {
+    if (current + lookahead > start && current + lookahead < end)
+        return tokens[current + lookahead];
+    else
+        // This should be an EOF token
+        return tokens[end];
 }
 
-void TokenView::eat_token() {
-
+inline void Scanner::eat_token() {
+    current++;
 }
 
-TokenView scan(const char *filename) {
+Scanner::Scanner(const char *filename) {
     PROFILE_FUNC();
+    start = 0;
+    current = 0;
+
     uint64 token_array_capacity_bytes = 4096;
     uint64 token_array_capacity = 128;
     uint64 token_array_length = 0;
-    Token *tokens = (Token*)malloc(token_array_capacity_bytes);
+    tokens = (Token*)malloc(token_array_capacity_bytes);
     if (tokens == NULL) {
         exit(1);
     }
     Token *next_token = tokens;
 
     char *source;
-    size_t file_size;
 
     {
         PROFILE_SCOPE("Scanner::read_file");
@@ -89,10 +99,8 @@ TokenView scan(const char *filename) {
     char *current = source;
     char *end = source + file_size;
     while (current < end) {
-        PROFILE_SCOPE("Scanner::token_loop");
         int state = START;
         uint64 token_len = 0;
-        //printf("Starting token %llu, %s\n", token_array_length, current);
         do {
             int ch = *current++;
             int equiv_class = equivalence_class[ch];
@@ -106,7 +114,7 @@ TokenView scan(const char *filename) {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
                 next_token->length = 1 + (*(current - token_len) == '\r');
-                next_token->type = (TokenType)(TT_SEMICOLON + (TT_NEWLINE - TT_SEMICOLON) * (*(current - token_len) < ';'));
+                next_token->kind = (TokenKind)(TT_SEMICOLON + (TT_NEWLINE - TT_SEMICOLON) * (*(current - token_len) < ';'));
                 current = next_token->token + next_token->length;
             } break;
             case S_CHAR: {
@@ -120,7 +128,7 @@ TokenView scan(const char *filename) {
                     }
                     if (*current == 0) {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: End Of File in character literal");
-                        return TokenView(tokens, 0, token_array_length);
+                        return;
                     }
                     current++;
                 }
@@ -128,7 +136,7 @@ TokenView scan(const char *filename) {
                     report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: More than one character in character literal");
                 }
                 next_token->length = token_len + 1;
-                next_token->type = TT_CHAR;
+                next_token->kind = TT_CHAR;
                 current = next_token->token + next_token->length;
             } break;
             case S_STRING: {
@@ -141,12 +149,12 @@ TokenView scan(const char *filename) {
                         token_len++;
                     } else if (*current == 0) {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: End Of File in string literal");
-                        return TokenView(tokens, 0, token_array_length);
+                        return;
                     }
                     current++;
                 }
                 next_token->length = token_len + 1;
-                next_token->type = TT_STRING;
+                next_token->kind = TT_STRING;
                 current = next_token->token + next_token->length;
             } break;
             case S_SINGLE_OP: {
@@ -154,36 +162,35 @@ TokenView scan(const char *filename) {
                 next_token->token = current - token_len;
                 next_token->length = 1;
                 switch (*next_token->token) {
-                    case '.': next_token->type = TT_DOT;        break;
-                    case '~': next_token->type = TT_TILDE;      break;
-                    case '#': next_token->type = TT_HASH;       break;
-                    case '$': next_token->type = TT_DOLLAR;     break;
-                    case ',': next_token->type = TT_COMMA;      break;
-                    case '?': next_token->type = TT_QUESTION;   break;
-                    case '@': next_token->type = TT_AT;         break;
-                    case '(': next_token->type = TT_LPAREN;     break;
-                    case ')': next_token->type = TT_RPAREN;     break;
-                    case '{': next_token->type = TT_LCURLY;     break;
-                    case '}': next_token->type = TT_RCURLY;     break;
-                    case '[': next_token->type = TT_LSQUARE;    break;
-                    case ']': next_token->type = TT_RSQUARE;    break;
-                    case '\\': next_token->type = TT_BACKSLASH; break;
-                    case '+': next_token->type = TT_PLUS;       break;
-                    case '-': next_token->type = TT_MINUS;      break;
-                    case '*': next_token->type = TT_STAR;       break;
-                    case '/': next_token->type = TT_SLASH;      break;
-                    case '<': next_token->type = TT_LESS;       break;
-                    case '>': next_token->type = TT_GREATER;    break;
-                    case '=': next_token->type = TT_EQUAL;      break;
-                    case '&': next_token->type = TT_AMPERSAND;  break;
-                    case '|': next_token->type = TT_PIPE;       break;
-                    case '^': next_token->type = TT_CARET;      break;
-                    case '!': next_token->type = TT_EXCL;       break;
-                    case '%': next_token->type = TT_PERCENT;    break;
-                    case ':': next_token->type = TT_COLON;      break;
+                    case '.': next_token->kind = TT_DOT;        break;
+                    case '~': next_token->kind = TT_TILDE;      break;
+                    //case '#': next_token->kind = TT_HASH;       break;
+                    case '$': next_token->kind = TT_DOLLAR;     break;
+                    case ',': next_token->kind = TT_COMMA;      break;
+                    case '?': next_token->kind = TT_QUESTION;   break;
+                    case '@': next_token->kind = TT_AT;         break;
+                    case '(': next_token->kind = TT_LPAREN;     break;
+                    case ')': next_token->kind = TT_RPAREN;     break;
+                    case '{': next_token->kind = TT_LCURLY;     break;
+                    case '}': next_token->kind = TT_RCURLY;     break;
+                    case '[': next_token->kind = TT_LSQUARE;    break;
+                    case ']': next_token->kind = TT_RSQUARE;    break;
+                    case '\\': next_token->kind = TT_BACKSLASH; break;
+                    case '+': next_token->kind = TT_PLUS;       break;
+                    case '-': next_token->kind = TT_MINUS;      break;
+                    case '*': next_token->kind = TT_STAR;       break;
+                    case '/': next_token->kind = TT_SLASH;      break;
+                    case '<': next_token->kind = TT_LESS;       break;
+                    case '>': next_token->kind = TT_GREATER;    break;
+                    case '=': next_token->kind = TT_EQUAL;      break;
+                    case '&': next_token->kind = TT_AMPERSAND;  break;
+                    case '|': next_token->kind = TT_PIPE;       break;
+                    case '^': next_token->kind = TT_CARET;      break;
+                    case '!': next_token->kind = TT_EXCL;       break;
+                    case '%': next_token->kind = TT_PERCENT;    break;
+                    case ':': next_token->kind = TT_COLON;      break;
                     default: {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 1, "Scanner: Encountered unrecognised character for S_SINGLE_OP: %c", *next_token->token);
-                        //printf("%s %d: Error - Encountered unrecognised character for S_SINGLE_OP: %d\n", __FILE__, __LINE__, *next_token->token);
                     }
                 }
                 current = next_token->token + next_token->length;
@@ -193,17 +200,17 @@ TokenView scan(const char *filename) {
                 next_token->token = current - token_len;
                 next_token->length = 2;
                 switch (*next_token->token) {
-                    case '+': next_token->type = TT_PLUS_PLUS;           break;
-                    case '-': next_token->type = TT_MINUS_MINUS;         break;
-                    case '<': next_token->type = TT_LESS_LESS;           break;
-                    case '>': next_token->type = TT_GREATER_GREATER;     break;
-                    case '&': next_token->type = TT_AMPERSAND_AMPERSAND; break;
-                    case '|': next_token->type = TT_PIPE_PIPE;           break;
-                    case '=': next_token->type = TT_EQUAL_EQUAL;         break;
-                    case ':': next_token->type = TT_COLON_COLON;         break;
+                    case '.': next_token->kind = TT_DOT_DOT;             break;
+                    case '+': next_token->kind = TT_PLUS_PLUS;           break;
+                    case '-': next_token->kind = TT_MINUS_MINUS;         break;
+                    case '<': next_token->kind = TT_LESS_LESS;           break;
+                    case '>': next_token->kind = TT_GREATER_GREATER;     break;
+                    case '&': next_token->kind = TT_AMPERSAND_AMPERSAND; break;
+                    case '|': next_token->kind = TT_PIPE_PIPE;           break;
+                    case '=': next_token->kind = TT_EQUAL_EQUAL;         break;
+                    case ':': next_token->kind = TT_COLON_COLON;         break;
                     default: {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 2, "Scanner: Encountered unrecognised character for S_DOUBLED_OP: %c", *next_token->token);
-                        //printf("%s %s: Error - Encountered unrecognised character for S_DOUBLED_OP: %c", __FILE__, __LINE__, *next_token->token);
                     }
                 }
                 current = next_token->token + next_token->length;
@@ -213,22 +220,21 @@ TokenView scan(const char *filename) {
                 next_token->token = current - token_len;
                 next_token->length = 2;
                 switch (*next_token->token) {
-                    case '+': next_token->type = TT_PLUS_EQUAL;       break;
-                    case '-': next_token->type = TT_MINUS_EQUAL;      break;
-                    case '*': next_token->type = TT_STAR_EQUAL;       break;
-                    case '/': next_token->type = TT_SLASH_EQUAL;      break;
-                    case '<': next_token->type = TT_LESS_EQUAL;       break;
-                    case '>': next_token->type = TT_GREATER_EQUAL;    break;
-                    case '=': next_token->type = TT_EQUAL_EQUAL;      break;
-                    case '&': next_token->type = TT_AMPERSAND_EQUAL;  break;
-                    case '|': next_token->type = TT_PIPE_EQUAL;       break;
-                    case '^': next_token->type = TT_CARET_EQUAL;      break;
-                    case '!': next_token->type = TT_EXCL_EQUAL;       break;
-                    case '%': next_token->type = TT_PERCENT_EQUAL;    break;
-                    case ':': next_token->type = TT_COLON_EQUAL;      break;
+                    case '+': next_token->kind = TT_PLUS_EQUAL;       break;
+                    case '-': next_token->kind = TT_MINUS_EQUAL;      break;
+                    case '*': next_token->kind = TT_STAR_EQUAL;       break;
+                    case '/': next_token->kind = TT_SLASH_EQUAL;      break;
+                    case '<': next_token->kind = TT_LESS_EQUAL;       break;
+                    case '>': next_token->kind = TT_GREATER_EQUAL;    break;
+                    case '=': next_token->kind = TT_EQUAL_EQUAL;      break;
+                    case '&': next_token->kind = TT_AMPERSAND_EQUAL;  break;
+                    case '|': next_token->kind = TT_PIPE_EQUAL;       break;
+                    case '^': next_token->kind = TT_CARET_EQUAL;      break;
+                    case '!': next_token->kind = TT_EXCL_EQUAL;       break;
+                    case '%': next_token->kind = TT_PERCENT_EQUAL;    break;
+                    case ':': next_token->kind = TT_COLON_EQUAL;      break;
                     default: {
                         report_error(__FILE__, __LINE__, filename, source, next_token->offset, 2, "Scanner: Encountered unrecognised character for S_EQUABLE: %c", *next_token->token);
-                        //printf("%s %s: Error - Encountered unrecognised character for S_DOUBLED_OP: %c", __FILE__, __LINE__, *next_token->token);
                     }
                 }
                 current = next_token->token + next_token->length;
@@ -236,14 +242,12 @@ TokenView scan(const char *filename) {
             case S_SAW_LETTER: {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
-                //uint64 hash = next_token->token[0];
                 uint64 hash = 0xcbf29ce484222325UL;
                 hash ^= next_token->token[0];
                 hash *= 0x100000001b3UL;
                 while (1) {
                     char c = *current++;
-                    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '$') {
-                        //hash = ROL(hash, 2) + c;
+                    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_') {
                         hash ^= c;
                         hash *= 0x100000001b3UL;
                         token_len++;
@@ -252,12 +256,23 @@ TokenView scan(const char *filename) {
                     }
                 }
                 next_token->length = token_len;
-                next_token->type = TT_IDENT;
-                TableEntry *e = hash_table_get(keywords_table, hash);
+                next_token->kind = TT_IDENT;
+                TableEntry<KeywordData> *e = keywords_table->get(hash);
                 if (e) {
-                    const struct KeywordData *data = (struct KeywordData*)e->data;
+                    const struct KeywordData *data = e->data;
                     if (data->len == next_token->length && !memcmp(data->text, next_token->token, data->len)) {
-                        next_token->type = data->type;
+                        next_token->kind = data->kind;
+                    } else goto not_keyword;
+                } else {
+                not_keyword:
+                    const char first = *next_token->token;
+                    if (first == '`')
+                        next_token->flags |= (uint8)IdentTokenFlags::IS_BACKTICKED;
+                    else if (first == '#') {
+                        next_token->kind = TT_HASH;
+                        next_token->flags |= (uint8)IdentTokenFlags::IS_HASHED;
+                    } else if (first == '$') {
+                        next_token->flags |= (uint8)IdentTokenFlags::IS_DOLLARED;
                     }
                 }
                 current = next_token->token + next_token->length;
@@ -293,7 +308,7 @@ TokenView scan(const char *filename) {
                     }
                 }
                 next_token->length = token_len;
-                next_token->type = is_float ? TT_FLOAT : TT_INT;
+                next_token->kind = is_float ? TT_FLOAT : TT_INT;
                 current = next_token->token + next_token->length;
             } break;
             case S_SAW_NUMERIC_LITERAL: {
@@ -310,7 +325,7 @@ TokenView scan(const char *filename) {
                                 break;
                             }
                         }
-                        next_token->type = TT_BINARY_LITERAL;
+                        next_token->kind = TT_BINARY_LITERAL;
                     } break;
                     case 'o': {
                         while (1) {
@@ -321,7 +336,7 @@ TokenView scan(const char *filename) {
                                 break;
                             }
                         }
-                        next_token->type = TT_OCTAL_LITERAL;
+                        next_token->kind = TT_OCTAL_LITERAL;
                     } break;
                     case 'x': {
                         while (1) {
@@ -332,10 +347,10 @@ TokenView scan(const char *filename) {
                                 break;
                             }
                         }
-                        next_token->type = TT_HEX_LITERAL;
+                        next_token->kind = TT_HEX_LITERAL;
                     } break;
                     default: {
-                        next_token->type = TT_NONE;
+                        next_token->kind = TT_NONE;
                     }
                 }
                 next_token->length = token_len;
@@ -345,14 +360,14 @@ TokenView scan(const char *filename) {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
                 next_token->length = 1;
-                next_token->type = TT_INT;
+                next_token->kind = TT_INT;
                 current = next_token->token + next_token->length;
             } break;
             case S_ARROW: {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
                 next_token->length = 2;
-                next_token->type = TT_ARROW;
+                next_token->kind = TT_ARROW;
                 current = next_token->token + next_token->length;
             } break;
             case S_SINGLE_LINE_COMMENT: {
@@ -373,33 +388,38 @@ TokenView scan(const char *filename) {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
                 next_token->length = 3;
-                next_token->type = *next_token->token == '<' ? TT_LESS_LESS_EQUAL : TT_GREATER_GREATER_EQUAL;
+                next_token->kind = *next_token->token == '<' ? TT_LESS_LESS_EQUAL : TT_GREATER_GREATER_EQUAL;
                 current = next_token->token + next_token->length;
             } break;
             case S_ERROR: {
                 report_error(__FILE__, __LINE__, filename, source, current - source, 1, "Scanner: Encountered unexpected character (%d)", *current);
-                return TokenView(tokens, 0, token_array_length);
+                return;
             } break;
             case S_EOF: {
             } break;
         }
         next_token++;
         token_array_length++;
-        //printf("length: %llu, capacity: %llu\n", token_array_length, token_array_capacity);
         if (token_array_length == token_array_capacity) {
             extend_tokens_array(&tokens, &token_array_capacity_bytes, &token_array_capacity);
             next_token = tokens + token_array_length;
         }
     }
 
+    count = token_array_length;
+
     next_token->offset = file_size;
     next_token->token = end;
     next_token->length = 0;
-    next_token->type = TT_EOF;
+    next_token->kind = TT_EOF;
     token_array_length++;
 
-    // @TODO: Probably don't leak this memory
+    // : Probably don't leak this memory
+    // NOTE: This memory probably sticks around for the rest of the
+    // program actually, because we need to be able to report errors and
+    // see the text of tokens sometimes.
     //munmap(source, file_size);
+    file_data = source;
 
-    return TokenView(tokens, 0, token_array_length);
+    return;
 }

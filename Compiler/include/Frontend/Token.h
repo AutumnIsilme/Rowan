@@ -3,7 +3,7 @@
 
 #include <Common.h>
 
-typedef enum __attribute__((__packed__)) _TokenType {
+typedef enum __attribute__((__packed__)) _TokenKind {
     /* Keywords */
     TT_IF = 0,
     TT_ELSE,
@@ -23,8 +23,8 @@ typedef enum __attribute__((__packed__)) _TokenType {
     TT_UNION,
     TT_SOA,
 
-    TT_TRUE,
-    TT_FALSE,
+    //TT_TRUE,
+    //TT_FALSE,
 
     /* Operators and symbols*/
     TT_LPAREN,
@@ -82,6 +82,7 @@ typedef enum __attribute__((__packed__)) _TokenType {
 
     TT_COMMA,        /* , */
 
+    TT_DOT_DOT,      /* .. */
     TT_DOT,          /* . */
 
     TT_COLON_EQUAL, /* := */
@@ -110,7 +111,7 @@ typedef enum __attribute__((__packed__)) _TokenType {
     TT_EOF,
 
     TT_NONE
-} TokenType;
+} TokenKind;
 
 static const char* token_type_names[TT_NONE + 1] = {
     "TT_IF",
@@ -131,8 +132,8 @@ static const char* token_type_names[TT_NONE + 1] = {
     "TT_UNION",
     "TT_SOA",
 
-    "TT_TRUE",
-    "TT_FALSE",
+    //"TT_TRUE",
+    //"TT_FALSE",
 
     "TT_LPAREN",
     "TT_RPAREN",
@@ -188,6 +189,7 @@ static const char* token_type_names[TT_NONE + 1] = {
 
     "TT_COMMA",
 
+    "TT_DOT_DOT",
     "TT_DOT",
 
     "TT_COLON_EQUALS",
