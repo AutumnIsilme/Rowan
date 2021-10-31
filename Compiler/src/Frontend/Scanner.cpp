@@ -4,6 +4,7 @@
 #include <Frontend/StateMachine.h>
 #include <Frontend/KeywordList.hh>
 #include <Error.h>
+#include <Files.hh>
 #include <Instrumentor.hh>
 
 #include <stdio.h>
@@ -13,8 +14,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <sys/mman.h>
 
 static HashTable<KeywordData> *keywords_table;
 
@@ -58,22 +57,9 @@ Scanner::Scanner(const char *filename) {
 
     {
         PROFILE_SCOPE("Scanner::read_file");
-        int file = open(filename, O_RDONLY);
-        struct stat s;
-        int status = fstat(file, &s);
-        if (status == -1) {
-            exit(1); // show errno
-        }
-        file_size = s.st_size;
-
-        source = (char*)mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
-        if (source == NULL) {
-            exit(1);
-        }
-        if (madvise(source, file_size, MADV_SEQUENTIAL | MADV_WILLNEED)) {
-            exit(1);
-        }
-        close(file);
+        auto file_read_result = read_file(filename);
+        source = file_read_result.buffer;
+        file_size = file_read_result.size;
     }
 
     // NOTE: This memory probably sticks around for the rest of the
