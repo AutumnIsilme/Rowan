@@ -28,12 +28,13 @@ void init_keywords_table() {
     PROFILE_FUNC();
     keywords_table = new HashTable<KeywordData>(7);
     for (uint i = 0; i < KEYWORD_LIST_LEN; i++) {
-        if (keywords_table->add((TableEntry<KeywordData>){
-            .hash=fnv_1(KEYWORD_LIST[i].text, KEYWORD_LIST[i].len),
-            .data=&KEYWORD_LIST[i],
-            .present=true,
-            .probe_count=0,
-        })) {
+        auto table_entry = TableEntry<KeywordData>(
+            fnv_1(KEYWORD_LIST[i].text, KEYWORD_LIST[i].len),
+            &KEYWORD_LIST[i],
+            true,
+            0
+        );
+        if (keywords_table->add(table_entry)) {
             printf("Failed to add keyword to table: %s\n", KEYWORD_LIST[i].text);
         }
     }

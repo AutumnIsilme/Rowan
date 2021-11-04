@@ -73,11 +73,11 @@ enum state {
 #define LAST_FINAL_STATE S_EOF
 
 const char in_token[LAST_STATE] = {
-    [S_NEWLINE] = 1, [S_CHAR] = 1, [S_STRING] = 1, [S_SINGLE_OP] = 1, [S_DOUBLED_OP] = 1, [S_EQUABLE] = 1, [S_SAW_LETTER] = 1,
-    [S_SAW_NUMBER] = 1, [S_SAW_NUMERIC_LITERAL] = 1, [S_LONE_ZERO] = 1, [S_ARROW] = 1, [S_SINGLE_LINE_COMMENT] = 1,
-    [S_MULTI_LINE_COMMENT] = 1, [S_SHIFT_EQUAL] = 1, [S_ERROR] = 1, [S_EOF] = 1, [START] = 0, [S_SEEN_ZERO] = 1, [S_SEEN_PLUS] = 1,
-    [S_SEEN_HYPHEN] = 1, [S_SEEN_STAR] = 1, [S_SEEN_SLASH] = 1, [S_SEEN_LESS] = 1, [S_SEEN_GREATER] = 1, [S_SEEN_EQUAL] = 1,
-    [S_SEEN_AMPERSAND] = 1, [S_SEEN_PIPE] = 1, [S_SEEN_COLON] = 1, [S_SEEN_EQUABLE] = 1, [S_SEEN_PERIOD] = 1, [S_START_NEWLINE] = 1, [S_LESS_LESS] = 1, [S_GREATER_GREATER] = 1
+    /*[S_NEWLINE] =*/ 1, /*[S_CHAR] =*/ 1, /*[S_STRING] =*/ 1, /*[S_SINGLE_OP] =*/ 1, /*[S_DOUBLED_OP] =*/ 1, /*[S_EQUABLE] =*/ 1, /*[S_SAW_LETTER] =*/ 1,
+    /*[S_SAW_NUMBER] =*/ 1, /*[S_SAW_NUMERIC_LITERAL] =*/ 1, /*[S_LONE_ZERO] =*/ 1, /*[S_ARROW] =*/ 1, /*[S_SINGLE_LINE_COMMENT] =*/ 1,
+    /*[S_MULTI_LINE_COMMENT] =*/ 1, /*[S_SHIFT_EQUAL] =*/ 1, /*[S_ERROR] =*/ 1, /*[S_EOF] =*/ 1, /*[START] =*/ 0, /*[S_SEEN_ZERO] =*/ 1, /*[S_SEEN_PLUS] =*/ 1,
+    /*[S_SEEN_HYPHEN] =*/ 1, /*[S_SEEN_STAR] =*/ 1, /*[S_SEEN_SLASH] =*/ 1, /*[S_SEEN_LESS] =*/ 1, /*[S_SEEN_GREATER] =*/ 1, /*[S_SEEN_EQUAL] =*/ 1,
+    /*[S_SEEN_AMPERSAND] =*/ 1, /*[S_SEEN_PIPE] =*/ 1, /*[S_SEEN_COLON] =*/ 1, /*[S_SEEN_EQUABLE] =*/ 1, /*[S_SEEN_PERIOD] =*/ 1, /*[S_START_NEWLINE] =*/ 1, /*[S_LESS_LESS] =*/ 1, /*[S_GREATER_GREATER] =*/ 1
 };
 
 /*

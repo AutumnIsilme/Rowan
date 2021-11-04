@@ -3,7 +3,8 @@
 
 #include <Common.h>
 
-typedef enum __attribute__((__packed__)) _TokenKind {
+// __attribute__((__packed__))
+typedef enum _TokenKind : uint8 {
     /* Keywords */
     TT_IF = 0,
     TT_ELSE,
