@@ -37,7 +37,7 @@ struct ValueNode {
         SINT,
         F32,
         F64,
-        F128,
+        //F128,
         BOOL
     };
 
@@ -48,12 +48,12 @@ struct ValueNode {
     union {
         const char *string_val;
 
-        uint128 unsigned_int_val;
-        int128 signed_int_val;
+        uint64 unsigned_int_val;
+        int64 signed_int_val;
 
         float32 float32_val;
         float64 float64_val;
-        float128 float128_val;
+        //float128 float128_val;
         
         bool bool_val;
     };

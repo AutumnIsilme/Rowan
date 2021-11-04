@@ -56,7 +56,7 @@ struct Scanner {
     }
 };
 
-void init_keywords_table();
+void init_symbol_table();
 Scanner scan(const char *filename);
 
 

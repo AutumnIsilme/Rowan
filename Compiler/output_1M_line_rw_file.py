@@ -9,9 +9,9 @@ lines = [
 
 import random
 
-with open("test_2_4M_lines.rw", "w") as file:
+with open("test_2M_lines.rw", "w") as file:
     file.write("main: () -> () {\n\ti :: 15")
-    for _ in range(1000000):
+    for _ in range(2000000):
         file.write(random.choice(lines))
     file.write("}\n")
     file.close()

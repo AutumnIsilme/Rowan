@@ -4,42 +4,10 @@
 
 #include <Frontend/Scanner.hh>
 #include <Frontend/Parser.hh>
+#include <Config.hh>
 #include <Error.h>
 #include <Timer.h>
 #include <Instrumentor.hh>
-
-struct Options {
-    bool print_tokens;
-    const char *filename;
-    const char *output_filename;
-};
-
-void print_help(const char *exec) {
-    printf("Usage: %s [filename]\n", exec);
-}
-
-int parse_args(int argc, char **argv, Options *options) {
-    PROFILE_FUNC();
-    Options result = {0, 0, 0};
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "--print-tokens") == 0) {
-            result.print_tokens = true;
-        } else if (strcmp(argv[i], "-o") == 0) {
-            result.output_filename = argv[i+1];
-            i++;
-        } else if (strcmp(argv[i], "-h") == 0) {
-            print_help(argv[0]);
-        } else {
-            result.filename = argv[i];
-        }
-    }
-    if (result.filename == 0) {
-        print_help(argv[0]);
-        return 1;
-    }
-    *options = result;
-    return 0;
-}
 
 int main(int argc, char **argv) {
     PROFILE_BEGIN_SESSION("Run", "rowan-run.json");
@@ -51,6 +19,7 @@ int main(int argc, char **argv) {
     }
 
     Options options = {0, 0, 0};
+    //Config config = parse_args(argc, argv, &options);
     if (parse_args(argc, argv, &options)) {
         return 0;
     }
@@ -58,7 +27,7 @@ int main(int argc, char **argv) {
     Timer timer2 = timer_create();
     Timer timer = timer_create();
 
-    init_keywords_table();
+    init_symbol_table();
 
     Scanner token_view = Scanner(argv[1]);
 
@@ -91,9 +60,9 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Token count: %llu\n", token_view.count);
     fprintf(stderr, "Time: %12f\n", timer_elapsed(&timer2));
 
-    auto parser = Parser(&token_view);
-    fprintf(stderr, "Parser complete.\n");
-    report_error(__FILE__, __LINE__, "aaa", token_view.file_data, parser.temp_toplevel->value.token->offset, parser.temp_toplevel->value.token->length, "Parser: Temp_toplevel error help info thingy");
+    //auto parser = Parser(&token_view);
+    //fprintf(stderr, "Parser complete.\n");
+    //report_error(__FILE__, __LINE__, "aaa", token_view.file_data, parser.temp_toplevel->value.token->offset, parser.temp_toplevel->value.token->length, "Parser: Temp_toplevel error help info thingy");
 
     PROFILE_END_SESSION();
     return 0;

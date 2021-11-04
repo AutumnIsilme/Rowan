@@ -26,6 +26,25 @@ FileReadResult read_file(const char* filename) {
     return result;
 }
 
+/*FileReadResult read_file(const char* filename) {
+    auto file_handle = CreateFileA((LPCSTR)filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        exit(1);
+    }
+    DWORD file_size_high;
+    DWORD file_size_low = GetFileSize(file_handle, &file_size_high);
+    uint64 file_size = ((uint64)file_size_high << 32) | file_size_low;
+    char* buffer = static_cast<char*>(malloc(file_size));
+    auto success = ReadFile(file_handle, static_cast<void*>(buffer), 0, NULL, NULL);
+    if (!success) {
+        exit(1);
+    }
+    CloseHandle(file_handle);
+    FileReadResult result = FileReadResult((char*)buffer, file_size);
+    return result;
+}
+*/
+
 void free_file(FileReadResult file) {
     UnmapViewOfFile(static_cast<void*>(file.buffer));
 }
