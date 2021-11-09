@@ -22,7 +22,7 @@ Expression* Parser::parse_expression(int precedence) {
     auto* current = peek_current();
     switch (current->kind) {
         case TT_IDENT: {
-            fprintf(stderr, "Parser::parse_expression case TT_IDENT\n");
+            //fprintf(stderr, "Parser::parse_expression case TT_IDENT\n");
             expr->kind = Expression::ExpressionKind::IDENT;
             expr->ident = eat_token();
         }

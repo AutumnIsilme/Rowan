@@ -26,6 +26,25 @@ FileReadResult read_file(const char* filename) {
     return result;
 }
 
+/*FileReadResult read_file(const char* filename) {
+    auto file_handle = CreateFileA((LPCSTR)filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        exit(1);
+    }
+    DWORD file_size_high;
+    DWORD file_size_low = GetFileSize(file_handle, &file_size_high);
+    uint64 file_size = ((uint64)file_size_high << 32) | file_size_low;
+    char* buffer = static_cast<char*>(malloc(file_size));
+    auto success = ReadFile(file_handle, static_cast<void*>(buffer), 0, NULL, NULL);
+    if (!success) {
+        exit(1);
+    }
+    CloseHandle(file_handle);
+    FileReadResult result = FileReadResult((char*)buffer, file_size);
+    return result;
+}
+*/
+
 void free_file(FileReadResult file) {
     UnmapViewOfFile(static_cast<void*>(file.buffer));
 }
@@ -33,8 +52,12 @@ void free_file(FileReadResult file) {
 #else
 #include <unistd.h>
 #include <sys/mman.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-FileReadResult read(const char* filename) {
+FileReadResult read_file(const char* filename) {
     int file = open(filename, O_RDONLY);
     struct stat s;
     int status = fstat(file, &s);
@@ -43,17 +66,17 @@ FileReadResult read(const char* filename) {
     }
     uint64 file_size = s.st_size;
 
-    source = (char*)mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
-    if (source == NULL) {
+    char* buffer = (char*)mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
+    if (buffer == NULL) {
         exit(1);
     }
-    if (madvise(source, file_size, MADV_SEQUENTIAL | MADV_WILLNEED)) {
+    if (madvise(buffer, file_size, MADV_SEQUENTIAL | MADV_WILLNEED)) {
         exit(1);
     }
     close(file);
 
     return {
-        source,
+        buffer,
         file_size
     };
 }

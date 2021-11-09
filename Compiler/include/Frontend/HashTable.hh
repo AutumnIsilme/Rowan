@@ -12,6 +12,9 @@ struct TableEntry {
     T *data;
     uint8 present;
     uint8 probe_count;
+
+    TableEntry(uint64 hash, T* data, uint8 present, uint8 probe_count)
+        : hash(hash), data(data), present(present), probe_count(probe_count) {}
 };
 
 template<typename T>

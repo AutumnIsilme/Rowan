@@ -11,9 +11,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 static HashTable<KeywordData> *keywords_table;
 
@@ -24,9 +21,9 @@ void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uin
     *token_array_capacity += *token_array_capacity;
 }
 
-void init_keywords_table() {
+void init_symbol_table() {
     PROFILE_FUNC();
-    keywords_table = new HashTable<KeywordData>(7);
+    /*keywords_table = new HashTable<KeywordData>(7);
     for (uint i = 0; i < KEYWORD_LIST_LEN; i++) {
         auto table_entry = TableEntry<KeywordData>(
             fnv_1(KEYWORD_LIST[i].text, KEYWORD_LIST[i].len),
@@ -37,7 +34,7 @@ void init_keywords_table() {
         if (keywords_table->add(table_entry)) {
             printf("Failed to add keyword to table: %s\n", KEYWORD_LIST[i].text);
         }
-    }
+    }*/
 }
 
 Scanner::Scanner(const char *filename) {
@@ -71,13 +68,14 @@ Scanner::Scanner(const char *filename) {
     char *current = source;
     char *end = source + file_size;
     while (current < end) {
-        int state = START;
+        uint8 state = START;
         uint64 token_len = 0;
         do {
-            int ch = *current++;
-            int equiv_class = equivalence_class[ch];
+            char ch = *current++;
+            uint16 equiv_class = equivalence_class[ch];
             state = transition[state + equiv_class];
             token_len += in_token[state];
+            //printf("STATE: %d\n", state);
         } while (state > LAST_FINAL_STATE);
 
         //printf("Final state %d\n", state);
@@ -214,6 +212,21 @@ Scanner::Scanner(const char *filename) {
             case S_SAW_LETTER: {
                 next_token->offset = current - token_len - source;
                 next_token->token = current - token_len;
+                current--;
+                token_len--;
+                //printf("We are here: '%.10s'\n", current);
+                while (1) {
+                    char c = *current++;
+                    if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_') {
+                        token_len++;
+                    } else break;
+                }
+                next_token->length = token_len;
+                next_token->kind = TT_IDENT;
+                current = next_token->token + next_token->length;
+                /*
+                current = next_token->token;
+                token_len = 0;
                 uint64 hash = 0xcbf29ce484222325UL;
                 hash ^= next_token->token[0];
                 hash *= 0x100000001b3UL;
@@ -226,24 +239,22 @@ Scanner::Scanner(const char *filename) {
                     } else {
                         break;
                     }
-                }
-                next_token->length = token_len;
-                next_token->kind = TT_IDENT;
+                }*/
                 /*
                 @OPTIMISATION:
                 We shouldn't be looking up the ident hash here, as we need to compare strings if we do that, and
                 that is slow. Instead this should probably be deferred to parsing, or keywords expanded into the
                 main state machine.
                 */
-                TableEntry<KeywordData> *e = keywords_table->get(hash);
+                /*TableEntry<KeywordData> *e = keywords_table->get(hash);
                 if (e) {
                     const struct KeywordData *data = e->data;
                     if (data->len == next_token->length && !memcmp(data->text, next_token->token, data->len)) {
                         next_token->kind = data->kind;
                     } else goto not_keyword;
-                } else {
-                not_keyword:
-                    const char first = *next_token->token;
+                } else {*/
+                //not_keyword:
+                    /*const char first = *next_token->token;
                     if (first == '`')
                         next_token->flags |= (uint8)IdentTokenFlags::IS_BACKTICKED;
                     else if (first == '#') {
@@ -251,9 +262,9 @@ Scanner::Scanner(const char *filename) {
                         next_token->flags |= (uint8)IdentTokenFlags::IS_HASHED;
                     } else if (first == '$') {
                         next_token->flags |= (uint8)IdentTokenFlags::IS_DOLLARED;
-                    }
-                }
-                current = next_token->token + next_token->length;
+                    }*/
+                //}
+                //printf("We are here: '%.10s' (with length %llu)\n", current, token_len);
             } break;
             case S_SAW_NUMBER: {
                 next_token->offset = current - token_len - source;
@@ -374,6 +385,118 @@ Scanner::Scanner(const char *filename) {
                 return;
             } break;
             case S_EOF: {
+            } break;
+            case S_KEYW_BREAK_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 5;
+                next_token->kind = TT_BREAK;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_CASE_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 4;
+                next_token->kind = TT_CASE;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_CAST_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 4;
+                next_token->kind = TT_CAST;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_CONTINUE_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 8;
+                next_token->kind = TT_CONTINUE;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_ELSE_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 4;
+                next_token->kind = TT_ELSE;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_ENUM_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 4;
+                next_token->kind = TT_ENUM;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_FOR_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 3;
+                next_token->kind = TT_FOR;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_IF_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 2;
+                next_token->kind = TT_IF;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_IMPORT_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 6;
+                next_token->kind = TT_IMPORT;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_INCLUDE_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 7;
+                next_token->kind = TT_INCLUDE;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_RETURN_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 6;
+                next_token->kind = TT_RETURN;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_STRUCT_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 6;
+                next_token->kind = TT_STRUCT;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_SWITCH_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 6;
+                next_token->kind = TT_SWITCH;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_UNION_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 5;
+                next_token->kind = TT_UNION;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_USING_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 5;
+                next_token->kind = TT_USING;
+                current = next_token->token + next_token->length;
+            } break;
+            case S_KEYW_WHILE_COMP: {
+                next_token->offset = current - token_len - source;
+                next_token->token = current - token_len;
+                next_token->length = 5;
+                next_token->kind = TT_WHILE;
+                current = next_token->token + next_token->length;
             } break;
         }
         next_token++;

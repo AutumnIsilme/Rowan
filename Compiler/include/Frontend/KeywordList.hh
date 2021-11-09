@@ -27,7 +27,7 @@ KeywordData KEYWORD_LIST[KEYWORD_LIST_LEN] = {
     {"struct", 6, TT_STRUCT},
     {"enum", 4, TT_ENUM},
     {"union", 5, TT_UNION},
-    {"soa", 3, TT_SOA},
+    //{"soa", 3, TT_SOA},
 
     //{"true", 4, TT_TRUE},
     //{"false", 5, TT_FALSE},

@@ -6,23 +6,43 @@
 // __attribute__((__packed__))
 typedef enum _TokenKind : uint8 {
     /* Keywords */
-    TT_IF = 0,
-    TT_ELSE,
-    TT_FOR,
-    TT_WHILE,
-    TT_RETURN,
-    TT_BREAK,
-    TT_CONTINUE,
-    TT_SWITCH,
+    TT_BREAK = 0,
     TT_CASE,
-    TT_INCLUDE,
-    TT_IMPORT,
-    TT_USING,
     TT_CAST,
-    TT_STRUCT,
+    TT_CONTINUE,
+    TT_ELSE,
     TT_ENUM,
+    TT_FOR,
+    TT_IF,
+    TT_IMPORT,
+    TT_INCLUDE,
+    TT_RETURN,
+    TT_STRUCT,
+    TT_SWITCH,
     TT_UNION,
-    TT_SOA,
+    TT_USING,
+    TT_WHILE,
+    // TT_SOA,
+
+    // I, F, E, L, S, O, R, W, H, T, U, N, B, K, C, A, M, P
+    // G
+    // abcdefghi klmnop rstu w
+    // abcdefghijklmnopqrstuvwxyz
+
+    // break
+    // continue case cast
+    // else enum
+    // for
+    // if include import
+    // return
+    // switch struct
+    // using union
+    // while
+
+    // i, e, f, w, r, b, c, s, u, e
+    // if, in, im, el, en, fo, wh, re, br, co, ca, sw, st,
+    // us, un
+    // inc, imp, els, enu
 
     //TT_TRUE,
     //TT_FALSE,
@@ -115,23 +135,23 @@ typedef enum _TokenKind : uint8 {
 } TokenKind;
 
 static const char* token_type_names[TT_NONE + 1] = {
-    "TT_IF",
-    "TT_ELSE",
-    "TT_FOR",
-    "TT_WHILE",
-    "TT_RETURN",
     "TT_BREAK",
-    "TT_CONTINUE",
-    "TT_SWITCH",
     "TT_CASE",
-    "TT_INCLUDE",
-    "TT_IMPORT",
-    "TT_USING",
     "TT_CAST",
-    "TT_STRUCT",
+    "TT_CONTINUE",
+    "TT_ELSE",
     "TT_ENUM",
+    "TT_FOR",
+    "TT_IF",
+    "TT_IMPORT",
+    "TT_INCLUDE",
+    "TT_RETURN",
+    "TT_STRUCT",
+    "TT_SWITCH",
     "TT_UNION",
-    "TT_SOA",
+    "TT_USING",
+    "TT_WHILE",
+    //"TT_SOA",
 
     //"TT_TRUE",
     //"TT_FALSE",
