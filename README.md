@@ -16,3 +16,7 @@ Release version:
 
 Debug version:
 `make debug`
+
+## Branches
+
+The statemachinekeywords branch is where I have made the state machine process keywords instead of processing them in the same place as identifiers.
