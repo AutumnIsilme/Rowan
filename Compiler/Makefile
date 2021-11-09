@@ -5,14 +5,7 @@ CXXFLAGS := -std=c++2a -flto
 CFLAGS := -Iinclude -Wall -Wextra -Wpedantic -Wno-c99-extensions
 LDFLAGS := 
 
-OBJS := src/main.o src/Frontend/Scanner.o src/Frontend/Math.o src/Error.o src/Timer.o src/Frontend/Parser.o
-FILES := src/main.cpp src/Frontend/Scanner.cpp src/Frontend/Math.cpp src/Error.cpp src/Timer.cpp src/Frontend/Parser.cpp
-
-%.o: %.cpp
-	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+FILES := src/main.cpp src/Error.cpp src/Files.cpp src/Config.cpp src/Timer.cpp src/Frontend/Scanner.cpp src/Frontend/Math.cpp src/Frontend/Parser.cpp
 
 .PHONY: test build clean release debug
 

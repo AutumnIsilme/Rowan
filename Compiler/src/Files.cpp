@@ -52,8 +52,12 @@ void free_file(FileReadResult file) {
 #else
 #include <unistd.h>
 #include <sys/mman.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-FileReadResult read(const char* filename) {
+FileReadResult read_file(const char* filename) {
     int file = open(filename, O_RDONLY);
     struct stat s;
     int status = fstat(file, &s);
@@ -62,17 +66,17 @@ FileReadResult read(const char* filename) {
     }
     uint64 file_size = s.st_size;
 
-    source = (char*)mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
-    if (source == NULL) {
+    char* buffer = (char*)mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
+    if (buffer == NULL) {
         exit(1);
     }
-    if (madvise(source, file_size, MADV_SEQUENTIAL | MADV_WILLNEED)) {
+    if (madvise(buffer, file_size, MADV_SEQUENTIAL | MADV_WILLNEED)) {
         exit(1);
     }
     close(file);
 
     return {
-        source,
+        buffer,
         file_size
     };
 }
