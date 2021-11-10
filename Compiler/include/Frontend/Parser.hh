@@ -1,5 +1,5 @@
-#ifndef PARSER_H_GUARD
-#define PARSER_H_GUARD
+#ifndef _PARSER_HH
+#define _PARSER_HH
 
 #include <Frontend/Scanner.hh>
 
@@ -146,4 +146,4 @@ struct Parser {
     }
 };
 
-#endif /* PARSER_H_GUARD */
+#endif /* _PARSER_HH */

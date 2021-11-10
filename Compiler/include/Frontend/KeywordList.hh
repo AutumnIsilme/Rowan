@@ -1,5 +1,5 @@
-#ifndef KEYWORD_LIST_H_GUARD
-#define KEYWORD_LIST_H_GUARD
+#ifndef _KEYWORD_LIST_HH
+#define _KEYWORD_LIST_HH
 
 #include <Common.h>
 #include <Frontend/Token.h>
@@ -59,4 +59,4 @@ const uint8 KEYWORD_LEN[KEYWORD_LIST_LEN] = {
     2, 3, 5, 6, 5, 8, 6, 4, 7, 5, 4, 6, 4, 5, 3, //4, 5,
 };
 
-#endif /* KEYWORD_LIST_H_GUARD */
+#endif /* _KEYWORD_LIST_HH */

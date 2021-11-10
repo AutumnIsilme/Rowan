@@ -22,3 +22,5 @@ Compiler/rwc.sln
 .vscode/
 
 Compiler/.cache
+
+Compiler/src/version.cpp

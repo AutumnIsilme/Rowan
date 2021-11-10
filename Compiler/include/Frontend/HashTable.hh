@@ -1,5 +1,5 @@
-#ifndef _SYMBOL_TABLE_H
-#define _SYMBOL_TABLE_H
+#ifndef _HASH_TABLE_HH
+#define _HASH_TABLE_HH
 
 #include <Common.h>
 #include <Frontend/Token.h>
@@ -41,4 +41,4 @@ struct HashTable {
 
 #include <Frontend/HashTable.cpp>
 
-#endif /* _SYMBOL_TABLE_H */
+#endif /* _HASH_TABLE_HH */

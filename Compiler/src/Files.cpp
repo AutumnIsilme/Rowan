@@ -62,15 +62,18 @@ FileReadResult read_file(const char* filename) {
     struct stat s;
     int status = fstat(file, &s);
     if (status == -1) {
+        printf("Error: File not found: \"%s\"\n", filename);
         exit(1); // show errno
     }
     uint64 file_size = s.st_size;
 
     char* buffer = (char*)mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, file, 0);
     if (buffer == NULL) {
+        printf("Error: Failed to memory map file: \"%s\"\n", filename);
         exit(1);
     }
     if (madvise(buffer, file_size, MADV_SEQUENTIAL | MADV_WILLNEED)) {
+        printf("ERROR: MADVISE Failed. this is probably bad, but I also can probably still keep going.\n");
         exit(1);
     }
     close(file);

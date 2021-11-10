@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 
     init_symbol_table();
 
-    Scanner token_view = Scanner(argv[1]);
+    Scanner token_view = Scanner(options.filename);
 
     fprintf(stderr, "Scan: %f\n", timer_elapsed(&timer));
     

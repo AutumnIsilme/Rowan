@@ -1,5 +1,5 @@
-#ifndef _SCANNER_H
-#define _SCANNER_H
+#ifndef _SCANNER_HH
+#define _SCANNER_HH
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -60,4 +60,4 @@ void init_symbol_table();
 Scanner scan(const char *filename);
 
 
-#endif /* _SCANNER_H */
+#endif /* _SCANNER_HH */

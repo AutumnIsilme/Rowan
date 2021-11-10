@@ -17,7 +17,10 @@ static HashTable<KeywordData> *keywords_table;
 void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uint64 *token_array_capacity) {
     *token_array_capacity_bytes += *token_array_capacity_bytes;
     *tokens = (Token*)realloc(*tokens, *token_array_capacity_bytes);
-    if (*tokens == NULL) exit(1);
+    if (*tokens == NULL) {
+        printf("ERROR: Realloc failed to return a valid pointer?!\n");
+        exit(1);
+    }
     *token_array_capacity += *token_array_capacity;
 }
 
@@ -47,6 +50,7 @@ Scanner::Scanner(const char *filename) {
     uint64 token_array_length = 0;
     tokens = (Token*)malloc(token_array_capacity_bytes);
     if (tokens == NULL) {
+        printf("ERROR: Malloc failed to return a valid pointer?!\n");
         exit(1);
     }
     Token *next_token = tokens;
@@ -72,7 +76,7 @@ Scanner::Scanner(const char *filename) {
         uint64 token_len = 0;
         do {
             char ch = *current++;
-            uint16 equiv_class = equivalence_class[ch];
+            uint16 equiv_class = equivalence_class[static_cast<uint8>(ch)];
             state = transition[state + equiv_class];
             token_len += in_token[state];
             //printf("STATE: %d\n", state);

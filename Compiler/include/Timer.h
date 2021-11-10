@@ -1,5 +1,5 @@
-#ifndef TIMER_H_GUARD
-#define TIMER_H_GUARD
+#ifndef _TIMER_H
+#define _TIMER_H
 
 #if 1 //defined(USE_TIMERS)
 
@@ -23,4 +23,4 @@ double timer_elapsed(Timer *timer);
 
 #endif
 
-#endif /* TIMER_H_GUARD */
+#endif /* _TIMER_H */

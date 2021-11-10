@@ -1,5 +1,5 @@
-#ifndef TOKEN_H_GUARD
-#define TOKEN_H_GUARD
+#ifndef _TOKEN_H
+#define _TOKEN_H
 
 #include <Common.h>
 
@@ -240,4 +240,4 @@ static const char* token_type_names[TT_NONE + 1] = {
     "TT_NONE"
 };
 
-#endif /* TOKEN_H_GUARD */
+#endif /* _TOKEN_H */

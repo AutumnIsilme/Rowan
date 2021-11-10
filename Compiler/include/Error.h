@@ -1,5 +1,5 @@
-#ifndef ERROR_H_GUARD
-#define ERROR_H_GUARD
+#ifndef _ERROR_H
+#define _ERROR_H
 
 #include "Common.h"
 
@@ -11,4 +11,4 @@ struct Error {
 
 void report_error(const char *reporter_filename, uint64 reporter_line, const char *filename, const char *file, uint64 offset, uint64 span, const char *msg_fmt, ...) ;
 
-#endif /* ERROR_H_GUARD */
+#endif /* _ERROR_H */

@@ -1,3 +1,6 @@
+#ifndef _FILES_HH
+#define _FILES_HH
+
 #include <Common.h>
 
 struct FileReadResult {
@@ -8,3 +11,5 @@ struct FileReadResult {
 };
 FileReadResult read_file(const char* filename);
 void free_file(FileReadResult file);
+
+#endif /* _FILES_HH */

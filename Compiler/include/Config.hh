@@ -1,3 +1,6 @@
+#ifndef _CONFIG_HH
+#define _CONFIG_HH
+
 #include <Common.h>
 
 struct Config {
@@ -12,3 +15,5 @@ struct Options {
 };
 void print_help(const char *exec);
 int parse_args(int argc, char **argv, Options *options);
+
+#endif /* _CONFIG_HH */
