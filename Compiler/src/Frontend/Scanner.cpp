@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static HashTable<KeywordData> *keywords_table;
+//static HashTable<KeywordData> *keywords_table;
 
 void extend_tokens_array(Token **tokens, uint64 *token_array_capacity_bytes, uint64 *token_array_capacity) {
     *token_array_capacity_bytes += *token_array_capacity_bytes;
@@ -517,7 +517,9 @@ Scanner::Scanner(const char *filename) {
     next_token->token = end;
     next_token->length = 0;
     next_token->kind = TT_EOF;
+    this->end = token_array_length;
     token_array_length++;
+
 
     return;
 }

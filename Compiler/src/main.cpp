@@ -4,6 +4,7 @@
 
 #include <Frontend/Scanner.hh>
 #include <Frontend/Parser.hh>
+#include <Frontend/AstTreePrinter.hh>
 #include <Config.hh>
 #include <Error.h>
 #include <Timer.h>
@@ -29,9 +30,9 @@ int main(int argc, char **argv) {
 
     init_symbol_table();
 
-    Scanner token_view = Scanner(options.filename);
+    Scanner scanner = Scanner(options.filename);
 
-    fprintf(stderr, "Scan: %f\n", timer_elapsed(&timer));
+    auto scan_time = timer_elapsed(&timer);
     
     timer_reset(&timer);
 
@@ -46,8 +47,8 @@ int main(int argc, char **argv) {
             }
         }
         
-        Token *tokens = token_view.tokens;
-        for (uint64 i = token_view.start; i < token_view.start + token_view.count; i++) {
+        Token *tokens = scanner.tokens;
+        for (uint64 i = scanner.start; i < scanner.start + scanner.count; i++) {
             fprintf(out_file, "[%s: %.*s]\n", token_type_names[(uint16)tokens[i].kind], (int)tokens[i].length, tokens[i].token);
         }
 
@@ -56,13 +57,21 @@ int main(int argc, char **argv) {
         }
     }
 
-    fprintf(stderr, "Output tokens: %f\n", timer_elapsed(&timer));
-    fprintf(stderr, "Token count: %llu\n", token_view.count);
-    fprintf(stderr, "Time: %12f\n", timer_elapsed(&timer2));
+    auto token_out_time = timer_elapsed(&timer);
+    auto total_time = timer_elapsed(&timer2);
 
-    //auto parser = Parser(&token_view);
-    //fprintf(stderr, "Parser complete.\n");
-    //report_error(__FILE__, __LINE__, "aaa", token_view.file_data, parser.temp_toplevel->value.token->offset, parser.temp_toplevel->value.token->length, "Parser: Temp_toplevel error help info thingy");
+    fprintf(stderr, "Scan: %f\n", scan_time);
+    fprintf(stderr, "Output tokens: %f\n", token_out_time);
+    fprintf(stderr, "Token count: %llu\n", scanner.count);
+    fprintf(stderr, "Time: %12f\n", total_time);
+    fprintf(stderr, "Processing speed: %f GB/s\n", scanner.file_size / 1000000000.0 / total_time);
+
+    auto parser = Parser(&scanner);
+    fprintf(stderr, "Parser complete.\n");
+    //report_error(__FILE__, __LINE__, options.filename, scanner.file_data, parser.temp_toplevel->value.token->offset, parser.temp_toplevel->value.token->length, "Parser: Temp_toplevel error help info thingy");
+    //parser.temp_toplevel->print();
+    ast_printer_print_expression(parser.temp_toplevel);
+    printf("\n");
 
     PROFILE_END_SESSION();
     return 0;

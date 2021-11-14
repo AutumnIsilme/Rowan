@@ -21,7 +21,7 @@ struct Block {
 
 struct UnaryExpression {
     Token* oper;
-    Expression* right;
+    Expression* expr;
 };
 
 struct BinaryExpression {
@@ -64,7 +64,8 @@ struct Expression {
     enum class ExpressionKind {
         IMPORT,
         BINARY,
-        UNARY,
+        PREFIX,
+        POSTFIX,
         VALUE,
         IDENT,
         FUNCTION,
