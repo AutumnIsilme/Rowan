@@ -25,7 +25,6 @@ int parse_args(int argc, char **argv, Options *options) {
             print_version();
             return 1;
         } else if (strcmp(argv[i], "--print-tokens") == 0) {
-            printf("print_tokens\n");
             result.print_tokens = true;
         } else if (strcmp(argv[i], "-o") == 0) {
             printf("output\n");

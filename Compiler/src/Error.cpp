@@ -45,7 +45,7 @@ void report_error(const char *reporter_filename, uint64 reporter_line, const cha
         index++;
     }
     fprintf(stderr, "\n%*s^", (int)column, "");
-    for (uint i = 0; i < span - 1; i++) {
+    for (uint i = 1; i < span; i++) {
         fprintf(stderr, "-");
     }
     fprintf(stderr, "\n");

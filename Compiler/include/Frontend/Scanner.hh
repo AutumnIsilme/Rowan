@@ -44,7 +44,7 @@ struct Scanner {
     }
 
     inline Token* peek_token(int lookahead) {
-        if (current + lookahead > start && current + lookahead < end)
+        if (current + lookahead >= start && current + lookahead < end)
             return &tokens[current + lookahead];
         else
             // This should be an EOF token
