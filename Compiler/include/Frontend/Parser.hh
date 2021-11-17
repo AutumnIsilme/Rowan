@@ -64,17 +64,21 @@ struct Expression {
     enum class ExpressionKind {
         IMPORT,
         BINARY,
+        ACCESS,
         PREFIX,
         POSTFIX,
         VALUE,
         IDENT,
-        FUNCTION,
+        CALL,
+        FUNCTION_DEF,
     };
 
     ExpressionKind kind;
 
+    // This is a tagged union thingy
     union {
         BinaryExpression bin_exp;
+        BinaryExpression call_exp;
         UnaryExpression unary_exp;
         ValueNode value;
         Token* ident;

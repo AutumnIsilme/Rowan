@@ -28,6 +28,7 @@ debug: CFLAGS += -g -O0
 debug: build
 
 test: build
+	build/rwc.out --version
 	build/rwc.out $(ARGS)
 
 version_file:
