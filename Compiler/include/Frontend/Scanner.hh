@@ -35,24 +35,78 @@ struct Scanner {
     //    : tokens(tokens), start(start_index), current(start_index), count(end_index - start_index), end(end_index) {}
     Scanner(const char *filename);
 
+    /*
+    @TODO: Profile some of these options properly.
+extern int start;
+extern int end;
+extern int current;
+extern int* data;
+void increment() {
+    if (current < end)
+        current++;
+}
+
+void base_eat_token() {
+    current++;
+}
+
+void base_eat_token_2() {
+    if (current < end)
+        current++;
+}
+
+int* base_peek() {
+    if (current < end) {
+        return &data[current];
+    }
+    return &data[end];
+}
+
+int* base_peek_2() {
+    return &data[current];
+}
+
+int* base_peek_ahead(int lookahead) {
+    if (current + lookahead >= start && current + lookahead < end) {
+        return &data[current];
+    }
+    return &data[end];
+}
+
+int* eat_token() {
+    base_eat_token();
+    return base_peek_ahead(-1);
+}
+
+int* eat_token_3() {
+    int* current = base_peek();
+    base_eat_token();
+    return current;
+}
+
+int* eat_token_2() {
+    auto* current = base_peek_2();
+    base_eat_token_2();
+    return current;
+}
+    */
+    
     inline Token* peek_next_token() {
-        if (current < end)
-            return &tokens[current];
-        else
-            // This should be an EOF token
-            return &tokens[end];
+        /* Current is kept between start and end so unless I do something stupid,
+           this should always be valid. */
+        return &tokens[current];
     }
 
     inline Token* peek_token(int lookahead) {
         if (current + lookahead >= start && current + lookahead < end)
             return &tokens[current + lookahead];
-        else
-            // This should be an EOF token
-            return &tokens[end];
+        // This should be an EOF token
+        return &tokens[end];
     }
 
     inline void eat_token() {
-        current++;
+        if (current < end)
+            current++;
     }
 };
 

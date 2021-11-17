@@ -218,6 +218,13 @@ Scanner::Scanner(const char *filename) {
                 next_token->token = current - token_len;
                 current--;
                 token_len--;
+                {
+                    char c = *current;
+                    if (c == '#' || c == '`' || c == '$') {
+                        token_len++;
+                        current++;
+                    }
+                }
                 //printf("We are here: '%.10s'\n", current);
                 while (1) {
                     char c = *current++;

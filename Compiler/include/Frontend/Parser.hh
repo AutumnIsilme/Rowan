@@ -142,8 +142,9 @@ struct Parser {
         return tokens->peek_token(ahead);
     }
     inline Token* eat_token() {
+        auto* current = tokens->peek_next_token();
         tokens->eat_token();
-        return tokens->peek_token(-1);
+        return current;
     }
 };
 

@@ -21,17 +21,17 @@ int parse_args(int argc, char **argv, Options *options) {
     for (int i = 0; i < argc; i++) {
         // @TODO: Use some sort of hash table to figure out what option is here more quickly?
         if (strcmp(argv[i], "--version") == 0) {
-            printf("version\n");
+            //printf("version\n");
             print_version();
             return 1;
         } else if (strcmp(argv[i], "--print-tokens") == 0) {
             result.print_tokens = true;
         } else if (strcmp(argv[i], "-o") == 0) {
-            printf("output\n");
+            //printf("output\n");
             result.output_filename = argv[i+1];
             i++;
         } else if (strcmp(argv[i], "-h") == 0) {
-            printf("command help\n");
+            //printf("command help\n");
             print_help(argv[0]);
         } else {
             result.filename = argv[i];
